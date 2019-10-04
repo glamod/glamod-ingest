@@ -77,6 +77,7 @@ ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_mean
 'observed_variable', 'units', 'observation_value', 'value_significance', 'quality_flag']
 
 merge_fields = ['report_id']
+time_field = 'date_time'
 
 fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
 'observation_duration', 'longitude', 'latitude', 'report_type', 
@@ -88,8 +89,8 @@ year_range = (1946, 2019)
 
 
 def get_input_paths(dr, year):
-    headers = glob.glob(f'{dr}/header-{year}-??-*.psv')
-    observers = glob.glob(f'{dr}/observations-*-{year}-??-*.psv')
+    headers = glob.glob(f'{BASE_INPUT_DIR}/{dr}/header-{year}-??-*.psv')
+    observers = glob.glob(f'{BASE_INPUT_DIR}/{dr}/observations-*-{year}-??-*.psv')
     return headers, observers
     
     
@@ -97,29 +98,6 @@ def get_df(paths, ftype):
     
     data_frames = [pd.read_csv(f, sep='|') for f in paths]
 
-    """
-Sucess/Failure is indicated by file existence:
- {BASE_LOG_DIR}/success/<dr>/<year>-<revision>-<other>.psv
- {BASE_LOG_DIR}/failure/<dr>/<year>-<revision>-<other>.psv
-
-For a given <dr>, <year>:
- - derive output and log file paths
- - CHECK: if `success_file` exists: exit
- - read and concatenate headers [x12]
- - CHECK: 12 files exist
- - read and concatenate observations [x7 x12=x84]
- - CHECK: 84 files exist
- - CHECK: lengths of concatenated df equals sum of individual dfs
- - merge tables:
-   - on field: "report_id"
-   - keeping all records in: observations
- - CHECK: there are no NULL values for "report_id"
- - write to `output_file`
- - IF FAILURE: write `failure_file`
- - IF SUCCESS: write `success_file`
-    """
-    
-    
     if ftype == 'head':
         fields = hfields + merge_fields
     elif ftype == 'obs':
@@ -129,48 +107,49 @@ For a given <dr>, <year>:
     data_frames = [_.drop(columns=droppers) for _ in data_frames]
     
     df = pd.concat(data_frames)
-    # 
-    assert (len(df) == sum([len(_) for _ in data_frames]))
-    return df
+    return df, data_frames
 
 
 def get_output_paths(dr, path):
-    year_file = '{year}-{revision}-{other}.psv'.format(**FILE_PATTN.match(path).groupdict())
+    fname = os.path.basename(path)
+    year_file = '{year}-{revision}-{other}.psv'.format(**FILE_PATTN.match(fname).groupdict())
+
     success_dir = os.path.join(BASE_LOG_DIR, 'success', dr)
     failure_dir = os.path.join(BASE_LOG_DIR, 'failure', dr)
     output_dir  = os.path.join(BASE_OUTPUT_DIR, dr)
 
     for _ in success_dir, failure_dir, output_dir:
-        os.makedirs(_)
+        if not os.path.isdir(_):
+            os.makedirs(_)
 
-    d = {'year_file': year_file
-         'output_path': os.path.join(output_dir, year_file)
-         'success_path': os.path.join(success_dir, year_file)
+    d = {'year_file': year_file,
+         'output_path': os.path.join(output_dir, year_file),
+         'success_path': os.path.join(success_dir, year_file),
          'failure_path': os.path.join(failure_dir, year_file)
         }
 
     return d
 
 
-def log(log_type, outputs, msg='')
+def log(log_type, outputs, msg=''):
     log_path = outputs[f'{log_type}_path']
     with open(log_path, 'w') as writer:
         writer.write(msg)
 
+    log_level = {'success': 'INFO', 'failure': 'ERROR'}[log_type]
+    message = msg or f'Wrote: {log_path}'
+    print(f'[{log_level}] {message}') 
+
 
 def process_year(dr, year):
     """
- - CHECK: there are no NULL values for "report_id"
- - write to `output_file`
- - IF FAILURE: write `failure_file`
- - IF SUCCESS: write `success_file`
-"""
-
+    """
     headers, observers = get_input_paths(dr, year)
-    outputs = get_output_paths(headers[0])
+    outputs = get_output_paths(dr, headers[0])
 
     # CHECK: if `success_file` exists: return
     if os.path.isfile(outputs['success_path']): 
+        print(f'[INFO] Success file exists: {outputs["success_path"]}')
         return
 
     # CHECK: 12 files exist
@@ -183,9 +162,22 @@ def process_year(dr, year):
         log('failure', outputs, f'84 Obs files not found for {year}')
         return
    
-    head = get_df(headers, 'head')
-    obs = get_df(observers, 'obs')
+    print('[INFO] Reading header files')
+    head, _head_dfs = get_df(headers, 'head')
+    # CHECK: lengths of concatenated df equals sum of individual dfs
+    if len(head) != sum([len(_) for _ in _head_dfs]):
+        log('failure', outputs, f'Header data frame does not match length of individual frames')
+        return
 
+    print('[INFO] Reading obs files')
+    obs, _obs_dfs = get_df(observers, 'obs')
+    # CHECK: lengths of concatenated df equals sum of individual dfs
+    if len(obs) != sum([len(_) for _ in _obs_dfs]):
+        log('failure', outputs, f'Observation data frame does not match length of individual frames')
+        return
+
+    print('[INFO] Merging files')
+    # Merge header and observations tables, retaining all obs records
     merged = obs.merge(head, on=merge_fields, how='left')
 
     # CHECK: length of observations matches length of merged table
@@ -194,9 +186,24 @@ def process_year(dr, year):
         return
  
     # CHECK: there are no NULL values for "report_id" 
+    null_fields = merged[merge_fields[0]].isnull().sum()
+    if null_fields > 0:
+        log('failure', outputs, f'Some merge fields ({merge_fields[0]}) are NULL after merge.')
+        return
 
+    # Remove the fields only required for merging
     merged = merged.drop(columns=merge_fields)
 
+    # Make sure the time field is time
+    merged[time_field] = pd.to_datetime(merged[time_field], utc=True) 
+
+    # Write output file
+    print(f'[INFO] Writing output file: {outputs["output_path"]}')
+    try:
+        merged.to_csv(outputs['output_path'], sep='|', index=False, date_format='%Y-%m-%d %H:%M:%S%z')
+        log('success', outputs)
+    except Exception as err:
+        log('failure', outputs, 'Could not write output to PSV file')
 
 
 def _fix_years(years):
@@ -208,13 +215,16 @@ def _validate_years(ctx, years):
         raise ValueError('Must provide at least one year as argument.')
 
     err_msg = 'Years must be in range: {}-{}'.format(*year_range)
+    
     try:
-        _fix_years(years)
+        years = _fix_years(years)
     except Exception as err:
         raise ValueError(err_msg)
 
     if years[0] < year_range[0] or years[-1] > year_range[-1]:
         raise ValueError(err_msg)
+
+    return years
 
 
 @click.command()
@@ -222,10 +232,7 @@ def _validate_years(ctx, years):
 @click.argument('years', nargs=-1, callback=_validate_years)
 def main(dr, years):
 
-    years = _fix_years(years)
-
     for year in years:
- 
         process_year(dr, year)
 
 
