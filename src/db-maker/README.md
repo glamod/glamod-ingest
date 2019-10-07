@@ -7,16 +7,18 @@
 
 ## Create schema and set permissions
 
-CREATE SCHEMA IF NOT EXISTS cdmlite AUTHORIZATION glamod_dbroot;
-GRANT ALL ON SCHEMA cdmlite TO webuser;
-GRANT SELECT ON ALL TABLES IN SCHEMA cdmlite TO webuser;
+```
+CREATE SCHEMA IF NOT EXISTS cdmlite AUTHORIZATION $SCHEMA_NAME;
+GRANT ALL ON SCHEMA $SCHEMA_NAME TO $WEB_USER;
+GRANT SELECT ON ALL TABLES IN SCHEMA $SCHEMA_NAME TO $WEB_USER;
+```
 
 ## Create table
 
 19 fields, 13 from obs table, 5 from header table, 1 geometry (dynamic).
 
 ```
-CREATE TABLE cdmlite.observations (
+CREATE TABLE $SCHEMA_NAME.observations (
     observation_id character varying NOT NULL,
     data_policy_licence integer,
     date_time timestamp with time zone,

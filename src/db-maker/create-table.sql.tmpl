@@ -1,0 +1,23 @@
+CREATE TABLE SCHEMA_NAME.observations (
+
+    observation_id character varying NOT NULL,
+    data_policy_licence integer,
+    date_time timestamp with time zone,
+    date_time_meaning integer,
+    observation_duration integer,
+    longitude numeric,
+    latitude numeric,
+    report_type integer,
+    observation_height_above_station_surface numeric,
+    observed_variable integer,
+    units integer,
+    observation_value numeric,
+    value_significance integer,
+    platform_type integer,
+    station_type integer,
+    primary_station_id character varying,
+    station_name character varying,
+    quality_flag integer,
+    location public.geography
+
+);
