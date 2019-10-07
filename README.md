@@ -41,3 +41,17 @@ The CDM-lite has the following 19 fields, derived from the CDM tables as shown:
 
 The last field, `location` is a spatial field generated from the `latitude` and
 `longitude` fields.
+
+## Setting up JASMIN environment
+
+```
+module load jaspy
+cd <DIR>
+python -m venv venv --system-site-packages
+```
+
+Activate venv:
+
+```
+source venv/bin/activate
+```
