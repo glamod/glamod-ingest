@@ -151,6 +151,7 @@ def log(log_type, outputs, msg=''):
 def process_year(dr, year):
     """
     """
+    print(f'[INFO] Working on {year} in: {dr}')
     headers, observers = get_input_paths(dr, year)
     outputs = get_output_paths(dr, headers[0])
 
