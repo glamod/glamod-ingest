@@ -13,31 +13,36 @@ improve performance.
 
 ## Database structure
 
-The CDM-lite has the following 19 fields, derived from the CDM tables as shown:
+The CDM-lite has the following 19 fields, derived from the CDM tables as shown here:
 
- - Observation ID: observations_table.observation_id
- - Time-step: observations_table.report_type
- - Timestamp: observations_table.date_time
- - Timestamp meaning: observations_table.date_time_meaning
- - Latitude: observations_table.latitude
- - Longitude: observations_table.longitude
- - Height: observations_table.observation_height_above_station_surface
- - Variable code (units are standardised): observations_table.observed_variable
- - Units: observations_table.units
- - Value: observations_table.observation_value
- - Value significance: observations_table.value_significance - value significance 
-      defines whether an observed value is max, min, mean, instantaneous, 
-      accumulations etc. and is probably needed?
- - Observation duration: observations_table.observation_duration 
- - Platform type: header_table.platform_type
- - Station type: observations_table.station_type
- - Station ID: header_table.primary_station_id
- - Station name: header_table.station_name
- - QC flag: observations_table.quality_flag
- - Data policy: observations_table.data_policy_licence
- - Location: Point Geometry Type, calculated dynamically from: 
-    - observations_table.latitude
-    - observations_table.longitude
+```
+CREATE lite.observations (
+    observation_id character varying NOT NULL,     /* from: obs */
+    data_policy_licence integer,                   /* from: obs */
+    date_time timestamp with time zone,            /* from: obs */
+    date_time_meaning integer,                     /* from: obs */
+    observation_duration integer,                  /* from: obs */
+    longitude numeric,                             /* from: obs */
+    latitude numeric,                              /* from: obs */
+    report_type integer,                           /* from: header */
+    height_of_station_above_sea_level numeric,     /* from: header */
+    observed_variable integer,                     /* from: obs */
+    units integer,                                 /* from: obs */
+    observation_value numeric,                     /* from: obs */
+    value_significance integer,                    /* from: obs */
+    platform_type integer,                         /* from: header */
+    station_type integer,                          /* from: header */
+    primary_station_id character varying,          /* from: header */
+    station_name character varying,                /* from: header */
+    quality_flag integer                           /* from: obs */
+    /* location geography - PostGIS field based on: (longitude, latitude) */
+
+);
+
+ALTER TABLE lite.observations ADD COLUMN location geography(Point, 4326);
+UPDATE lite.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+```
+```
 
 The last field, `location` is a spatial field generated from the `latitude` and
 `longitude` fields.
