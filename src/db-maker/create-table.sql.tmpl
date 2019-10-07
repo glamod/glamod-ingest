@@ -8,7 +8,7 @@ CREATE TABLE SCHEMA_NAME.observations (
     longitude numeric,
     latitude numeric,
     report_type integer,
-    observation_height_above_station_surface numeric,
+    height_of_station_above_sea_level numeric,
     observed_variable integer,
     units integer,
     observation_value numeric,
@@ -17,7 +17,9 @@ CREATE TABLE SCHEMA_NAME.observations (
     station_type integer,
     primary_station_id character varying,
     station_name character varying,
-    quality_flag integer,
-    location public.geography
+    quality_flag integer
 
 );
+
+ALTER TABLE SCHEMA_NAME.observations ADD COLUMN location geography(Point, 4326);
+UPDATE SCHEMA_NAME.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);

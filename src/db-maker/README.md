@@ -7,6 +7,8 @@
 
 ## Create schema and set permissions
 
+This normally needs to be done by user `postgres`:
+
 ```
 CREATE SCHEMA IF NOT EXISTS cdmlite AUTHORIZATION $SCHEMA_NAME;
 GRANT ALL ON SCHEMA $SCHEMA_NAME TO $WEB_USER;
