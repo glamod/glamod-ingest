@@ -70,18 +70,19 @@ BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/marine'
 
 FILE_PATTN = re.compile('^(observations|header)-?(\w+)?-(?P<year>\d{4})-(\d{2})-(?P<revision>r\d{1,})-(?P<other>\d{1,})\.psv')
 
-hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name']
+hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name',
+           'height_of_station_above_sea_level']
 
 ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
-'observation_duration', 'longitude', 'latitude', 'observation_height_above_station_surface', 
-'observed_variable', 'units', 'observation_value', 'value_significance', 'quality_flag']
+'observation_duration', 'longitude', 'latitude', 'observed_variable', 'units', 
+'observation_value', 'value_significance', 'quality_flag']
 
 merge_fields = ['report_id']
 time_field = 'date_time'
 
 fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
 'observation_duration', 'longitude', 'latitude', 'report_type', 
-'observation_height_above_station_surface', 'observed_variable', 'units', 'observation_value', 
+'height_of_station_above_sea_level', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
 'quality_flag']
 
