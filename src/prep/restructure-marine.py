@@ -90,8 +90,13 @@ year_range = (1946, 2019)
 
 
 def get_input_paths(dr, year):
-    headers = glob.glob(f'{BASE_INPUT_DIR}/{dr}/header-{year}-??-*.psv')
-    observers = glob.glob(f'{BASE_INPUT_DIR}/{dr}/observations-*-{year}-??-*.psv')
+    data_dir = f'{BASE_INPUT_DIR}/{dr}'
+
+    if not os.path.isdir(data_dir):
+        raise Exception(f'Cannot find directory: {data_dir}')        
+
+    headers = glob.glob(f'{data_dir}/header-{year}-??-*.psv')
+    observers = glob.glob(f'{data_dir}/observations-*-{year}-??-*.psv')
     return headers, observers
     
     
@@ -114,17 +119,18 @@ def get_df(paths, ftype):
 def get_output_paths(dr, path):
     fname = os.path.basename(path)
     year_file = '{year}-{revision}-{other}.psv'.format(**FILE_PATTN.match(fname).groupdict())
+    year = year_file.split('-')[0]
 
     success_dir = os.path.join(BASE_LOG_DIR, 'success', dr)
     failure_dir = os.path.join(BASE_LOG_DIR, 'failure', dr)
-    output_dir  = os.path.join(BASE_OUTPUT_DIR, dr)
+    output_dir  = os.path.join(BASE_OUTPUT_DIR, year)
 
     for _ in success_dir, failure_dir, output_dir:
         if not os.path.isdir(_):
             os.makedirs(_)
 
     d = {'year_file': year_file,
-         'output_path': os.path.join(output_dir, year_file),
+         'output_path': os.path.join(output_dir, f'{dr}-{year_file}'),
          'success_path': os.path.join(success_dir, year_file),
          'failure_path': os.path.join(failure_dir, year_file)
         }
@@ -163,14 +169,14 @@ def process_year(dr, year):
         log('failure', outputs, f'84 Obs files not found for {year}')
         return
    
-    print('[INFO] Reading header files')
+    print(f'[INFO] Reading header files: {headers[0]} , etc.')
     head, _head_dfs = get_df(headers, 'head')
     # CHECK: lengths of concatenated df equals sum of individual dfs
     if len(head) != sum([len(_) for _ in _head_dfs]):
         log('failure', outputs, f'Header data frame does not match length of individual frames')
         return
 
-    print('[INFO] Reading obs files')
+    print(f'[INFO] Reading obs files: {observers[0]} , etc.')
     obs, _obs_dfs = get_df(observers, 'obs')
     # CHECK: lengths of concatenated df equals sum of individual dfs
     if len(obs) != sum([len(_) for _ in _obs_dfs]):
@@ -212,6 +218,19 @@ def _fix_years(years):
 
 
 def _validate_years(ctx, years):
+
+    if len(years) < 1:
+        # Populate from directory
+        if 'dr' not in ctx.params:
+            raise ValueError('Cannot work out years without "directory" argument.')
+
+        headers = glob.glob(f'{BASE_INPUT_DIR}/{ctx.params["dr"]}/header-*-??-*.psv')
+        years = sorted(list(set([os.path.basename(header).split('-')[1] for header in headers])))
+        years = [int(_) for _ in years]
+
+        if len(years) < 1:
+            raise Exception(f'Cannot find any header data in directory: {ctx.params["dr"]}')
+
     if len(years) < 1:
         raise ValueError('Must provide at least one year as argument.')
 
