@@ -202,7 +202,7 @@ def process_year(dr, year):
     print(f'[INFO] Writing output file: {outputs["output_path"]}')
     try:
         merged.to_csv(outputs['output_path'], sep='|', index=False, date_format='%Y-%m-%d %H:%M:%S%z')
-        log('success', outputs)
+        log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
     except Exception as err:
         log('failure', outputs, 'Could not write output to PSV file')
 
