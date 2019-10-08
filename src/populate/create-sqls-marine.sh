@@ -9,6 +9,11 @@ for ydir in $(find $BASE_OUTPUT_DIR -maxdepth 1 -name "[1-2][0-9][0-9][0-9]"); d
     sql_file=${BASE_SQL_DIR}/load-$(basename $ydir).sql
     rm -f $sql_file
 
+    # Ignore if no files present
+    if [ $(find $ydir -maxdepth 0 -empty) ]; then
+        continue
+    fi
+
     echo "\\cd '$ydir/'" > $sql_file
     
     for fname in $(ls $ydir | sort -u); do
