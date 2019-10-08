@@ -41,10 +41,10 @@ For each <year> in <years>:
  For a given <dr>, <year>:
  - derive output and log file paths
  - CHECK: if `success_file` exists: exit 
- - read and concatenate headers [x12]
- - CHECK: 12 files exist
- - read and concatenate observations [x7 x12=x84]
- - CHECK: 84 files exist
+ - read and concatenate headers [n_h=1..12]
+ - CHECK: at least 1 Header file exists
+ - read and concatenate observations [x7 n_o=n_h*7]
+ - CHECK: at least 1 obs file exists for each header file
  - CHECK: lengths of concatenated df equals sum of individual dfs
  - merge tables:
    - on field: "report_id"
@@ -89,8 +89,18 @@ fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meani
 year_range = (1946, 2019)
 
 
+def _resolve_absolute_dir(dr):
+    if dr.startswith(BASE_INPUT_DIR):
+        data_dir = dr
+    else:
+        data_dir = f'{BASE_INPUT_DIR}/{dr}'
+
+    return data_dir
+
+
 def get_input_paths(dr, year):
-    data_dir = f'{BASE_INPUT_DIR}/{dr}'
+
+    data_dir = _resolve_absolute_dir(dr)
 
     if not os.path.isdir(data_dir):
         raise Exception(f'Cannot find directory: {data_dir}')        
@@ -160,14 +170,14 @@ def process_year(dr, year):
         print(f'[INFO] Success file exists: {outputs["success_path"]}')
         return
 
-    # CHECK: 12 files exist
-    if len(headers) != 12:
-        log('failure', outputs, f'12 Header files not found for {year}')
+    # CHECK: at least 1 Header file exists
+    if len(headers) < 1:
+        log('failure', outputs, f'No Header files found for {dr} AND {year}')
         return
 
-    # CHECK: 84 files exist
-    if len(observers) != 84:
-        log('failure', outputs, f'84 Obs files not found for {year}')
+    # CHECK: at least 1 obs file exists for each header file
+    if len(observers) < 1:
+        log('failure', outputs, f'No Obs files found for {dr} AND {year}')
         return
    
     print(f'[INFO] Reading header files: {headers[0]} , etc.')
@@ -192,6 +202,10 @@ def process_year(dr, year):
     if (len(obs) != len(merged)):
         log('failure', outputs, 'Lengths of obs and merged are different')
         return
+
+    # Delete header and obs
+    del head
+    del obs
  
     # CHECK: there are no NULL values for "report_id" 
     null_fields = merged[merge_fields[0]].isnull().sum()
@@ -225,7 +239,8 @@ def _validate_years(ctx, years):
         if 'dr' not in ctx.params:
             raise ValueError('Cannot work out years without "directory" argument.')
 
-        headers = glob.glob(f'{BASE_INPUT_DIR}/{ctx.params["dr"]}/header-*-??-*.psv')
+        abs_dir = _resolve_absolute_dir(ctx.params["dr"])
+        headers = glob.glob(f'{abs_dir}/header-*-??-*.psv')
         years = sorted(list(set([os.path.basename(header).split('-')[1] for header in headers])))
         years = [int(_) for _ in years]
 
@@ -252,6 +267,9 @@ def _validate_years(ctx, years):
 @click.option('-d', '--directory', 'dr', required=True, help='Directory to scan.')
 @click.argument('years', nargs=-1, callback=_validate_years)
 def main(dr, years):
+
+    # Convert `dr` back to single directory name, to work with other code
+    dr = os.path.basename(dr)
 
     for year in years:
         process_year(dr, year)
