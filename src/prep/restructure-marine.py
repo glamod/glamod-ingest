@@ -50,6 +50,7 @@ For each <year> in <years>:
    - on field: "report_id"
    - keeping all records in: observations 
  - CHECK: length of observations matches length of merged table
+ - CHECK: all time fields include a real value
  - CHECK: there are no NULL values for "report_id" 
  - write to `output_file`
  - IF FAILURE: write `failure_file`
@@ -220,6 +221,13 @@ def process_year(dr, year):
     # Make sure the time field is time
     merged[time_field] = pd.to_datetime(merged[time_field], utc=True) 
 
+    # CHECK: all time fields include a real value
+    obs_ids_of_bad_time_fields = merged[merged[time_field].isnull()]['observation_id'].unique().tolist()
+    if len(obs_ids_of_bad_time_fields) > 0:
+        log('failure', outputs, f'Some fields had missing value for {time_field}. Observation IDs were: '
+                                f'{obs_ids_of_bad_time_fields}')
+        return
+    
     # Add the location column
     location = merged.apply(lambda x: 'SRID=4326;POINT({0} {1})'.format(x['longitude'], x['latitude']), axis = 1)
     merged = merged.assign(location=location)
