@@ -80,11 +80,12 @@ ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_mean
 merge_fields = ['report_id']
 time_field = 'date_time'
 
-fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
+out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
 'observation_duration', 'longitude', 'latitude', 'report_type', 
 'height_of_station_above_sea_level', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
-'quality_flag']
+'quality_flag', 'location']
+
 
 year_range = (1946, 2019)
 
@@ -219,10 +220,15 @@ def process_year(dr, year):
     # Make sure the time field is time
     merged[time_field] = pd.to_datetime(merged[time_field], utc=True) 
 
+    # Add the location column
+    location = merged.apply(lambda x: 'SRID=4326;POINT({0} {1})'.format(x['longitude'], x['latitude']), axis = 1)
+    merged = merged.assign(location=location)
+
     # Write output file
     print(f'[INFO] Writing output file: {outputs["output_path"]}')
     try:
-        merged.to_csv(outputs['output_path'], sep='|', index=False, date_format='%Y-%m-%d %H:%M:%S%z')
+        merged.to_csv(outputs['output_path'], sep='|', index=False, 
+                      columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z')
         log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
     except Exception as err:
         log('failure', outputs, 'Could not write output to PSV file')
