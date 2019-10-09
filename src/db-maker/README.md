@@ -1,46 +1,99 @@
 # CDM-lite work
 
+## Postgis was failing, but fixed with...
+
+ERROR:
+
+```
+sudo su postgres
+psql cdmlite
+cdmlite=# CREATE EXTENSION postgis;
+ERROR:  could not load library "/usr/pgsql-9.6/lib/rtpostgis-2.3.so": libhdf5_hl.so.6: cannot open shared object file: No such file or directory
+cdmlite=# \q
+```
+
+Needed a fix, found at: 
+
+https://gis.stackexchange.com/questions/31177/error-creating-a-spatial-database-error-could-not-load-library-usr-pgsql-9
+
+Fix was:
+
+```
+find / -name libhdf5_hl.so.6
+$ echo "/usr/lib64/openmpi/lib/" >>  /etc/ld.so.conf.d/postgis-fix.conf
+ldconfig
+ldconfig -p | grep libhdf5
+```
+
+And it linked okay to the library!
+
+```
+
+Tested and then worked:
+
+```
+sudo su 
+psql cdmlite
+cdmlite=# CREATE EXTENSION postgis;
+```
+
 ## THOUGHTS
 
  - put files on local server?
  - put files on /work/scratch/astephen/glamod/ ? 
+ 
+
+## Create database
+
+As user `postgres`:
+
+```
+CREATE DATABASE cdmlite;
+GRANT ALL ON DATABASE cdmlite TO glamod_dbroot ;
+```
 
 ## Create schema and set permissions
 
-This normally needs to be done by user `postgres`:
-
 ```
-CREATE SCHEMA IF NOT EXISTS cdmlite AUTHORIZATION $SCHEMA_NAME;
+CREATE SCHEMA IF NOT EXISTS $SCHEMA_NAME AUTHORIZATION $SCHEMA_NAME;
 GRANT ALL ON SCHEMA $SCHEMA_NAME TO $WEB_USER;
 GRANT SELECT ON ALL TABLES IN SCHEMA $SCHEMA_NAME TO $WEB_USER;
 ```
 
 ## Create table
 
-19 fields, 13 from obs table, 5 from header table, 1 geometry (dynamic).
+
+!!!Should we include NOT NULL in these, or is it default?!!!
+
+19 fields, 12 from obs table, 6 from header table, 1 geometry (dynamic).
 
 ```
-CREATE TABLE $SCHEMA_NAME.observations (
-    observation_id character varying NOT NULL,
-    data_policy_licence integer,
-    date_time timestamp with time zone,
-    date_time_meaning integer,
-    observation_duration integer,
-    longitude numeric,
-    latitude numeric,
-    report_type integer,
-    observation_height_above_station_surface numeric,
-    observed_variable integer,
-    units integer,
-    observation_value numeric,
-    value_significance integer,
-    platform_type integer,
-    station_type integer,
-    primary_station_id character varying,
-    station_name character varying,
-    quality_flag integer,
-    location public.geography
+CREATE lite.observations (
+    observation_id character varying NOT NULL,     /* from: obs */
+    data_policy_licence integer,                   /* from: obs */
+    date_time timestamp with time zone,            /* from: obs */
+    date_time_meaning integer,                     /* from: obs */
+    observation_duration integer,                  /* from: obs */
+    longitude numeric,                             /* from: obs */
+    latitude numeric,                              /* from: obs */
+    report_type integer,                           /* from: header */
+    height_of_station_above_sea_level numeric,     /* from: header */
+    observed_variable integer,                     /* from: obs */
+    units integer,                                 /* from: obs */
+    observation_value numeric,                     /* from: obs */
+    value_significance integer,                    /* from: obs */
+    platform_type integer,                         /* from: header */
+    station_type integer,                          /* from: header */
+    primary_station_id character varying,          /* from: header */
+    station_name character varying,                /* from: header */
+    quality_flag integer                           /* from: obs */
+    /* location geography - PostGIS field based on: (longitude, latitude) */
+
 );
+
+ALTER TABLE lite.observations ADD COLUMN location geography(Point, 4326);
+UPDATE lite.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+
 ```
 
 NOTE: all fields are derived from the CDM `observations_table` except:
@@ -58,7 +111,20 @@ NOTE: all fields are derived from the CDM `observations_table` except:
    
 ## Creating the location spatial field
 
-??? Do this later!!!
+This looks like a viable approach:
+
+ https://gis.stackexchange.com/questions/145007/creating-geometry-from-lat-lon-in-table-using-postgis
+ 
+ 
+IS IT `geometry` or `geography`? This source says performance might be 4x quicker if "geometry" is used:
+
+ https://medium.com/coord/postgis-performance-showdown-geometry-vs-geography-ec99967da4f0
+
+```
+# Create table and populate, then:
+ALTER TABLE lite.observations ADD COLUMN location geography(Point, 4326);   /* or: geometry(Point, 4236) - also works */
+UPDATE lite.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+```
 
 ## Creating the partitions and triggers
 
@@ -85,7 +151,6 @@ From the observations table:
     observation_duration integer,
     longitude numeric,
     latitude numeric,
-    observation_height_above_station_surface numeric,
     observed_variable integer,
     units integer,
     observation_value numeric,
@@ -99,6 +164,7 @@ From the header table:
     station_type integer,
     primary_station_id character varying,
     station_name character varying,
+    height_of_station_above_sea_level numeric,
  
 # Loading the land data
 
@@ -118,6 +184,7 @@ Fields required from header table [2]:
 $ while read FIELD ; do f=$(echo $FIELD | cut -d' ' -f1);  if [ $(head -1 header_table_BETA_ARM00087148_1.psv | grep $f) ]; then echo $f in HEADER ; fi ;  done < fields.txt
 report_type in HEADER
 primary_station_id in HEADER
+height_of_station_above_sea_level in HEADER
 ```
 
 Fields required from the observations_table [13]:
@@ -132,7 +199,6 @@ date_time_meaning in OBS
 observation_duration in OBS
 longitude in OBS
 latitude in OBS
-observation_height_above_station_surface in OBS
 observed_variable in OBS
 units in OBS
 observation_value in OBS
@@ -145,7 +211,7 @@ Fields required from station_configuration table [3]:
 ```
 station_name
 station_type
-platform_type 
+platform_type
 ```
 
 ## Land logic for constructing cdmlite-ready PSV files
