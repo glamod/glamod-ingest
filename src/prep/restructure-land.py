@@ -69,8 +69,7 @@ import click
 BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/land'
 BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/land'
 
-hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name',
-           'height_of_station_above_sea_level']
+hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name']
 
 ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
 'observation_duration', 'longitude', 'latitude', 'observed_variable', 'units', 
@@ -81,11 +80,12 @@ time_field = 'date_time'
 
 out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
 'observation_duration', 'longitude', 'latitude', 'report_type', 
-'height_of_station_above_sea_level', 'observed_variable', 'units', 'observation_value', 
+'height_above_surface', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
 'quality_flag', 'location']
 
 
+from height_handler import fix_land_height
 from land_batcher import LandBatcher
 batcher = LandBatcher()
 
@@ -239,6 +239,9 @@ def process_year(batch_id, year, headers):
         log('failure', outputs, f'Some fields had missing value for {time_field}. Observation IDs were: '
                                 f'{obs_ids_of_bad_time_fields}')
         return
+
+    # Add height column
+    fix_land_height(merged)
     
     # Add the location column
     location = merged.apply(lambda x: 'SRID=4326;POINT({0} {1})'.format(x['longitude'], x['latitude']), axis = 1)

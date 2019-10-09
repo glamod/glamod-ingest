@@ -72,22 +72,22 @@ BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/marine'
 
 FILE_PATTN = re.compile('^(observations|header)-?(\w+)?-(?P<year>\d{4})-(\d{2})-(?P<revision>r\d{1,})-(?P<other>\d{1,})\.psv')
 
-hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name',
-           'height_of_station_above_sea_level']
+hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name']
 
 ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
-'observation_duration', 'longitude', 'latitude', 'observed_variable', 'units', 
-'observation_value', 'value_significance', 'quality_flag']
+'observation_duration', 'longitude', 'latitude', 'observation_height_above_station_surface',
+'observed_variable', 'units', 'observation_value', 'value_significance', 'quality_flag']
 
 merge_fields = ['report_id']
 time_field = 'date_time'
 
 out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
 'observation_duration', 'longitude', 'latitude', 'report_type', 
-'height_of_station_above_sea_level', 'observed_variable', 'units', 'observation_value', 
+'height_above_surface', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
 'quality_flag', 'location']
 
+renamers = {'observation_height_above_station_surface': 'height_above_surface'}
 
 year_range = (1946, 2019)
 
@@ -232,6 +232,9 @@ def process_year(dr, year):
         log('failure', outputs, f'Some fields had missing value for {time_field}. Observation IDs were: '
                                 f'{obs_ids_of_bad_time_fields}')
         return
+
+    # Rename columns
+    merged.rename(columns=renamers, inplace=True)
     
     # Add the location column
     location = merged.apply(lambda x: 'SRID=4326;POINT({0} {1})'.format(x['longitude'], x['latitude']), axis = 1)
