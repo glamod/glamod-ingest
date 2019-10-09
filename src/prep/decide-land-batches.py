@@ -10,8 +10,8 @@ Read all header files and sort into sensible batches to process together.
 
 import os
 
-COMMON_BASE = '/gws/nopw/j04/c3s311a_lot2/data/glamod_land_delivery_2018_12_31_Beta/header_table/'
-HEADER_FILES = [_.replace(COMMON_BASE, '') for _ in open('../data/header_files.txt').read().strip().split()]
+COMMON_BASE = '/gws/nopw/j04/c3s311a_lot2/data/beta_fix7/header_table/'
+HEADER_DIRS = [_.replace(COMMON_BASE, '') for _ in open('../data/header_dirs.txt').read().strip().split()]
 
 LAND_BATCH_RULES = '../data/land_batch_rules.txt'
 
@@ -25,13 +25,15 @@ base_dirs = [
 ]
 
 
+def write_header():
+    with open(LAND_BATCH_RULES, 'w') as writer:
+        writer.write('path_prefix|batch_id|of_n_batches|batch_length\n')
+
+
 def fix_batches(dr, paths):
 
     indx = len(dr + '/')
     paths = [_[indx:] for _ in paths]
-
-    with open(LAND_BATCH_RULES, 'w') as writer:
-        writer.write('path_prefix|batch_id|of_n_batches|batch_length\n')
 
     for n in range(1, 100):
         d = {}
@@ -44,7 +46,7 @@ def fix_batches(dr, paths):
         mn = min([len(_) for _ in d.values()])
         mx = max([len(_) for _ in d.values()])
  
-        if mx > 5000: continue
+        if mx > 500: continue
  
         print(f'N: {n}, Number of batches: {len(d)}, sizes: {mn} - {mx}')
         inp = input('Fix? ')
@@ -54,8 +56,8 @@ def fix_batches(dr, paths):
             with open(LAND_BATCH_RULES, 'a') as writer:
 
                 for key in sorted(d.keys()):
-                    s = f'{dr}/{key}* :: {dr.replace("/", "-")}-{key} :: of {len(d)} :: {len(d[key])}'
-                    print(s)
+                    s = f'{dr}/{key}*|{dr.replace("/", "-")}-{key}|{len(d)}|{len(d[key])}'
+#                    print(s)
                     writer.write(s + '\n')
 
             return
@@ -63,9 +65,11 @@ def fix_batches(dr, paths):
 
 def main():
 
+    write_header()
+
     for dr in base_dirs:
 
-        paths = [_ for _ in HEADER_FILES if _.startswith(dr)]   
+        paths = [_ for _ in HEADER_DIRS if _.startswith(dr)]   
         batches = fix_batches(dr, paths) 
 
 

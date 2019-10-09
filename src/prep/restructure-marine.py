@@ -66,7 +66,8 @@ import click
 
 BASE_INPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019/ICOADS_R3.0.0T/level1a'
 # _EG_SUB_DIR = '001-110'
-BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019_cdm_lite/ICOADS_R3.0.0T/level1a'
+BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine'
+# .../gws/nopw/j04/c3s311a_lot2/data/marine/r092019_cdm_lite/ICOADS_R3.0.0T/level1a'
 BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/marine'
 
 FILE_PATTN = re.compile('^(observations|header)-?(\w+)?-(?P<year>\d{4})-(\d{2})-(?P<revision>r\d{1,})-(?P<other>\d{1,})\.psv')
@@ -189,12 +190,16 @@ def process_year(dr, year):
         log('failure', outputs, f'Header data frame does not match length of individual frames')
         return
 
+    del _head_dfs
+
     print(f'[INFO] Reading obs files: {observers[0]} , etc.')
     obs, _obs_dfs = get_df(observers, 'obs')
     # CHECK: lengths of concatenated df equals sum of individual dfs
     if len(obs) != sum([len(_) for _ in _obs_dfs]):
         log('failure', outputs, f'Observation data frame does not match length of individual frames')
         return
+
+    del _obs_dfs
 
     print('[INFO] Merging files')
     # Merge header and observations tables, retaining all obs records
