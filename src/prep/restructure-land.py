@@ -60,6 +60,7 @@ For a given <batch_id>:
 """
 
 import os, re, glob
+import random, time
 
 import pandas as pd
 import click
@@ -87,8 +88,18 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 
 from height_handler import fix_land_height
 from land_batcher import LandBatcher
-batcher = LandBatcher()
 
+nap = random.randint(10, 180)
+batcher = None
+
+
+def _get_batcher():
+    global batcher
+
+    if not batcher:
+        batcher = LandBatcher()
+
+    return batcher
 
     
 def get_df(paths, ftype):
@@ -109,8 +120,9 @@ def get_df(paths, ftype):
 
 def get_output_paths(batch_id, year):
 
+    _batcher = _get_batcher()
     # BASE/<report_type>/<yyyy>/<report_type>-<yyyy>-<batch_id>.psv
-    report_type = str(batcher.get_report_type(batch_id))
+    report_type = str(_batcher.get_report_type(batch_id))
     
     year_file = f'{report_type}-{year}-{batch_id}.psv'
     year = str(year)
@@ -244,13 +256,13 @@ def process_year(batch_id, year, headers):
     fix_land_height(merged)
     
     # Add the location column
-    location = merged.apply(lambda x: 'SRID=4326;POINT({0} {1})'.format(x['longitude'], x['latitude']), axis = 1)
+    location = merged.apply(lambda x: 'SRID=4326;POINT({:.4f} {:.4f})'.format(x['longitude'], x['latitude']), axis=1)
     merged = merged.assign(location=location)
 
     # Write output file
     print(f'[INFO] Writing output file: {outputs["output_path"]}')
     try:
-        merged.to_csv(outputs['output_path'], sep='|', index=False, 
+        merged.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.4f', 
                       columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z')
         log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
     except Exception as err:
@@ -259,7 +271,8 @@ def process_year(batch_id, year, headers):
 
 def get_year_file_dict(batch_id):
 
-    headers = batcher.get(batch_id)
+    _batcher = _get_batcher()
+    headers = _batcher.get(batch_id)
 
     resp = {}
     for head in headers:
@@ -272,8 +285,9 @@ def get_year_file_dict(batch_id):
 
 
 @click.command()
+@click.option('--wait/--no-wait', default=False)
 @click.option('-b', '--batch-id', 'batch_id', required=True, help='Batch to process.')
-def main(batch_id):
+def main(wait, batch_id):
     """
 For a given <batch_id>:
  - get list of header dirs
@@ -281,6 +295,13 @@ For a given <batch_id>:
 
  - for each <year>:
 """
+
+    # The `wait` argument is used when running in batch mode. Since the process starts
+    # by reading the same headers file we don't want them all executing at the same time.
+
+    if wait:
+        print(f'[INFO] Pausing for {nap} seconds to vary header file reading...')
+        time.sleep(nap)
 
     year_file_dict = get_year_file_dict(batch_id)    
     years = sorted(year_file_dict.keys())

@@ -237,13 +237,13 @@ def process_year(dr, year):
     merged.rename(columns=renamers, inplace=True)
     
     # Add the location column
-    location = merged.apply(lambda x: 'SRID=4326;POINT({0} {1})'.format(x['longitude'], x['latitude']), axis = 1)
+    location = merged.apply(lambda x: 'SRID=4326;POINT({:.4f} {:.4f})'.format(x['longitude'], x['latitude']), axis=1)
     merged = merged.assign(location=location)
 
     # Write output file
     print(f'[INFO] Writing output file: {outputs["output_path"]}')
     try:
-        merged.to_csv(outputs['output_path'], sep='|', index=False, 
+        merged.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.4f', 
                       columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z')
         log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
     except Exception as err:
@@ -286,9 +286,12 @@ def _validate_years(ctx, years):
 
 
 @click.command()
+@click.option('--wait/--no-wait', default=False)
 @click.option('-d', '--directory', 'dr', required=True, help='Directory to scan.')
 @click.argument('years', nargs=-1, callback=_validate_years)
-def main(dr, years):
+def main(wait, dr, years):
+    # The `wait` argument is used when running in batch mode. Since the process starts
+    # by reading the same headers file we don't want them all executing at the same time.
 
     # Convert `dr` back to single directory name, to work with other code
     dr = os.path.basename(dr)
