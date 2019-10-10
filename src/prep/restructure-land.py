@@ -254,10 +254,14 @@ def process_year(batch_id, year, headers):
 
     # Add height column
     fix_land_height(merged)
+ 
+    # Modify platform type where it is not defined
+    merged['platform_type'] = merged.apply(lambda x: x['platform_type'] or 'NULL', axis=1) 
     
     # Add the location column
-    location = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
-    merged = merged.assign(location=location)
+#    location = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
+#    merged = merged.assign(location=location)
+    merged['location'] = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
 
     # Write output file
     print(f'[INFO] Writing output file: {outputs["output_path"]}')

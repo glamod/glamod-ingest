@@ -17,14 +17,21 @@ source venv/bin/activate
 cd src/prep/
 
 batches=$(python get-all-land-batches.py)
+new_batches=0
 
 for batch_id in $batches; do
 
     # Check if re-run from here
-#    if [ -f $LAST_BATCH_FILE ] && [ $(cat $LAST_BATCH_FILE) != $batch_id ]; then 
-#        echo "[WARN] Batch already submitted: $batch_id"
-#        continue 
-#    fi
+    if [ -f $LAST_BATCH_FILE ] && [ $(cat $LAST_BATCH_FILE) == $batch_id ]; then 
+        new_batches=1
+        echo "[INFO] Found batch to resume after..."
+        continue
+    fi
+
+    if [ $new_batches -eq 0 ]; then
+        echo "[WARN] Batch already submitted: $batch_id"
+        continue 
+    fi
  
     WAIT=""
     PREFIX=""
@@ -33,7 +40,7 @@ for batch_id in $batches; do
 
         WAIT="--wait"
         logbase=${lotus_dir}/${batch_id}
-        PREFIX="bsub -q short-serial -W 02:00 -o ${logbase}.out -e ${logbase}.err "
+        PREFIX="bsub -q short-serial -W 03:00 -o ${logbase}.out -e ${logbase}.err "
 
     fi
 
