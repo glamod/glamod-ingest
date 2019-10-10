@@ -256,13 +256,13 @@ def process_year(batch_id, year, headers):
     fix_land_height(merged)
     
     # Add the location column
-    location = merged.apply(lambda x: 'SRID=4326;POINT({:.4f} {:.4f})'.format(x['longitude'], x['latitude']), axis=1)
+    location = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
     merged = merged.assign(location=location)
 
     # Write output file
     print(f'[INFO] Writing output file: {outputs["output_path"]}')
     try:
-        merged.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.4f', 
+        merged.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.3f', 
                       columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z')
         log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
     except Exception as err:

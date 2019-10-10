@@ -16,7 +16,7 @@ data_dirs=$(find $input_dir -maxdepth 1 -name "???-???")
 
 for dr in $data_dirs; do
 
-    cmd="./wrap-restructure-marine.sh -d $dr"
+    cmd="$PWD/wrap-restructure-marine.sh -d $dr"
     
     if [ $mode == 'batch' ]; then
 

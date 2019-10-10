@@ -13,3 +13,5 @@ for dr in $dirs; do
     fi
 
 done
+
+rm -f last-land-batch.txt
