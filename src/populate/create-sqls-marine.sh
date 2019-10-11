@@ -1,27 +1,32 @@
 #!/bin/bash
 
-BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/marine/r092019_cdm_lite/ICOADS_R3.0.0T/level1a
-BASE_SQL_DIR=/gws/smf/j04/c3s311a_lot2/cdmlite/marine/sql
-mkdir -p $BASE_SQL_DIR
+REPORT_TYPE=0
 
-for ydir in $(find $BASE_OUTPUT_DIR -maxdepth 1 -name "[1-2][0-9][0-9][0-9]"); do
+if [ ! $REPORT_TYPE ] || [[ ! $REPORT_TYPE =~ ^[023]$ ]]; then
+    echo "[ERROR] Must provide report type of: 0, 2 or 3."
+    exit
+fi
 
-    sql_file=${BASE_SQL_DIR}/load-$(basename $ydir).sql
-    rm -f $sql_file
+BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine/${REPORT_TYPE}
+BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/marine/sql
+lotus_dir=/gws/smf/j04/c3s311a_lot2/cdmlite/log/populate/lotus-marine
 
-    # Ignore if no files present
-    if [ $(find $ydir -maxdepth 0 -empty) ]; then
-        continue
+mkdir -p $lotus_dir
+
+mode=batch
+mode=local
+
+for year in $(ls $BASE_OUTPUT_DIR | sort -r); do
+
+    cmd="$PWD/create-sql-marine-year.sh $REPORT_TYPE $year"
+    sql_id="marine-${REPORT_TYPE}-${year}-sql"
+    lotus_base=$lotus_dir/$sql_id
+    
+    if [ $mode == 'batch' ]; then
+        cmd="bsub -q short-serial -W 02:00 -o ${lotus_base}.out -e ${lotus_base}.err $cmd"
     fi
 
-    echo "\\cd '$ydir/'" > $sql_file
-    
-    for fname in $(ls $ydir | sort -u); do
-   
-        echo "\\COPY lite.observations FROM '$fname' WITH CSV HEADER DELIMITER AS '|' NULL AS 'NULL'" >> $sql_file
-
-    done
-
-    echo "[INFO] Wrote: $sql_file"
-
+    echo "[INFO] Running: $cmd"
+    $cmd
+ 
 done

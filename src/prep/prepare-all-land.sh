@@ -22,6 +22,10 @@ new_batches=0
 for batch_id in $batches; do
 
     # Check if re-run from here
+    if [ ! -f $LAST_BATCH_FILE ]; then
+        new_batches=1
+    fi
+
     if [ -f $LAST_BATCH_FILE ] && [ $(cat $LAST_BATCH_FILE) == $batch_id ]; then 
         new_batches=1
         echo "[INFO] Found batch to resume after..."

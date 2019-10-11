@@ -164,6 +164,13 @@ def get_observations_files(headers):
             raise Exception(f'Obs file missing: {observer}')
 
     return observers
+
+
+def _set_platform_type(x):
+    if pd.isnull(x['platform_type']):
+        return 'NULL'
+
+    return x['platform_type']
  
 
 def process_year(batch_id, year, headers):
@@ -256,7 +263,7 @@ def process_year(batch_id, year, headers):
     fix_land_height(merged)
  
     # Modify platform type where it is not defined
-    merged['platform_type'] = merged.apply(lambda x: x['platform_type'] or 'NULL', axis=1) 
+    merged['platform_type'] = merged.apply(lambda x: _set_platform_type(x), axis=1) 
     
     # Add the location column
 #    location = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)

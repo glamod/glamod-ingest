@@ -14,8 +14,9 @@ lotus_dir=/gws/smf/j04/c3s311a_lot2/cdmlite/log/populate/lotus-land
 mkdir -p $lotus_dir
 
 mode=batch
+#mode=local
 
-for year in $(ls $BASE_OUTPUT_DIR); do
+for year in $(ls $BASE_OUTPUT_DIR | sort -r); do
 
     cmd="$PWD/create-sql-land-year.sh $REPORT_TYPE $year"
     sql_id="land-${REPORT_TYPE}-${year}-sql"
