@@ -1,6 +1,6 @@
 CREATE TABLE SCHEMA_NAME.observations (
 
-    observation_id character varying NOT NULL,
+    observation_id character varying NOT NULL PRIMARY KEY,
     data_policy_licence integer,
     date_time timestamp with time zone,
     date_time_meaning integer,
@@ -22,4 +22,4 @@ CREATE TABLE SCHEMA_NAME.observations (
 );
 
 ALTER TABLE SCHEMA_NAME.observations ADD COLUMN location geography(Point, 4326);
-UPDATE SCHEMA_NAME.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+/* UPDATE SCHEMA_NAME.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326); */
