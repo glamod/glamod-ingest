@@ -25,7 +25,7 @@ CREATE lite.observations (
     longitude numeric,                             /* from: obs */
     latitude numeric,                              /* from: obs */
     report_type integer,                           /* from: header */
-    height_of_station_above_sea_level numeric,     /* from: header */
+    height_above_surface,                          /* from: observation (marine) OR mapped from observed_variable (land) */
     observed_variable integer,                     /* from: obs */
     units integer,                                 /* from: obs */
     observation_value numeric,                     /* from: obs */
@@ -40,8 +40,10 @@ CREATE lite.observations (
 );
 
 ALTER TABLE lite.observations ADD COLUMN location geography(Point, 4326);
-UPDATE lite.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+/* UPDATE lite.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326); */
+
 ```
+
 ```
 
 The last field, `location` is a spatial field generated from the `latitude` and
