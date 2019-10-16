@@ -58,13 +58,14 @@ For each <year> in <years>:
 
 """
 
-import os, re, glob
+import os, re, glob, sys
 
 import pandas as pd
 import click
 
 
-BASE_INPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019/ICOADS_R3.0.0T/level1a'
+#BASE_INPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019/ICOADS_R3.0.0T/level1a'
+BASE_INPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019/ICOADS_R3.0.0T/level1e'
 # _EG_SUB_DIR = '001-110'
 BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine'
 # .../gws/nopw/j04/c3s311a_lot2/data/marine/r092019_cdm_lite/ICOADS_R3.0.0T/level1a'
@@ -72,7 +73,9 @@ BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/marine'
 
 FILE_PATTN = re.compile('^(observations|header)-?(\w+)?-(?P<year>\d{4})-(\d{2})-(?P<revision>r\d{1,})-(?P<other>\d{1,})\.psv')
 
-hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name']
+# Note: header field "report_quality" is kept for filtering values of 0 only.
+#    The out_fields will exclude it later.
+hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name', 'report_quality']
 
 ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
 'observation_duration', 'longitude', 'latitude', 'observation_height_above_station_surface',
@@ -89,7 +92,10 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 
 renamers = {'observation_height_above_station_surface': 'height_above_surface'}
 
-year_range = (1946, 2019)
+year_range = (1946, 2010)
+
+EXCLUDE_DIRS = ['063-714']
+
 
 
 def _resolve_absolute_dir(dr):
@@ -191,6 +197,9 @@ def process_year(dr, year):
         return
 
     del _head_dfs
+
+    print(f'[INFO] Exclude records where `report_quality` is NOT 0.')
+    head = head[head['report_quality'] == 0]
 
     print(f'[INFO] Reading obs files: {observers[0]} , etc.')
     obs, _obs_dfs = get_df(observers, 'obs')
@@ -295,6 +304,9 @@ def main(wait, dr, years):
 
     # Convert `dr` back to single directory name, to work with other code
     dr = os.path.basename(dr)
+    if dr in EXCLUDE_DIRS:
+        print(f'[WARN] Directory is in the EXCLUSION LIST: {dr}')
+        sys.exit()
 
     for year in years:
         process_year(dr, year)
