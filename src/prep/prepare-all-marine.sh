@@ -22,7 +22,7 @@ for dr in $data_dirs; do
 
         sdir=$(basename $dr)
         logbase=${lotus_dir}/${sdir}
-        cmd="bsub -q short-serial -W 03:00 -o ${logbase}.out -e ${logbase}.err $cmd"
+        cmd="bsub -q short-serial -W 06:00 -o ${logbase}.out -e ${logbase}.err $cmd"
 
     fi
 
