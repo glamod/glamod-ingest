@@ -15,7 +15,7 @@ lotus_dir=/gws/smf/j04/c3s311a_lot2/cdmlite/log/populate/lotus-marine
 mkdir -p $lotus_dir
 
 mode=batch
-mode=local
+#mode=local
 
 for year in $(ls $BASE_OUTPUT_DIR | sort -r); do
 
