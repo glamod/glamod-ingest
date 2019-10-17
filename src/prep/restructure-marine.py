@@ -167,6 +167,13 @@ def log(log_type, outputs, msg=''):
     print(f'[{log_level}] {message}') 
 
 
+def _default_to_null(x, column):
+    if pd.isnull(x[column]):
+        return 'NULL'
+
+    return x[column]
+
+
 def process_year(dr, year):
     """
     """
@@ -244,7 +251,11 @@ def process_year(dr, year):
 
     # Rename columns
     merged.rename(columns=renamers, inplace=True)
-    
+
+    # Fill NULLs in output for fields that might be null in input
+    for column in ['platform_type', 'height_above_surface', 'primary_station_id', 'station_name']:
+        merged[column] = merged.apply(lambda x: _default_to_null(x, column), axis=1)
+
     # Add the location column
     location = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
     merged = merged.assign(location=location)

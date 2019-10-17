@@ -266,8 +266,6 @@ def process_year(batch_id, year, headers):
     merged['platform_type'] = merged.apply(lambda x: _set_platform_type(x), axis=1) 
     
     # Add the location column
-#    location = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
-#    merged = merged.assign(location=location)
     merged['location'] = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
 
     # Write output file

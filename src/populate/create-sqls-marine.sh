@@ -7,7 +7,8 @@ if [ ! $REPORT_TYPE ] || [[ ! $REPORT_TYPE =~ ^[023]$ ]]; then
     exit
 fi
 
-BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine/${REPORT_TYPE}
+BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine
+#/${REPORT_TYPE}
 BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/marine/sql
 lotus_dir=/gws/smf/j04/c3s311a_lot2/cdmlite/log/populate/lotus-marine
 
