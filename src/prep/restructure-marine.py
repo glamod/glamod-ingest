@@ -167,11 +167,19 @@ def log(log_type, outputs, msg=''):
     print(f'[{log_level}] {message}') 
 
 
-def _default_to_null(x, column):
+def _default_to_null(x, column, dtype=None):
+    """
+    If no value then insert "NULL".
+    If `dtype` function set then use that to convert real values.
+    """
     if pd.isnull(x[column]):
         return 'NULL'
 
-    return x[column]
+    value = x[column]
+    if dtype:
+        value = dtype(value)
+
+    return value
 
 
 def process_year(dr, year):
@@ -251,10 +259,18 @@ def process_year(dr, year):
 
     # Rename columns
     merged.rename(columns=renamers, inplace=True)
+  
+    # Set default report_type to 0 for marine
+    print('[INFO] Setting `report_type` to zero')
+    merged['report_type'] = 0
 
     # Fill NULLs in output for fields that might be null in input
-    for column in ['platform_type', 'height_above_surface', 'primary_station_id', 'station_name']:
+    for column in ['height_above_surface', 'primary_station_id', 'station_name']:
         merged[column] = merged.apply(lambda x: _default_to_null(x, column), axis=1)
+
+    # Fill NULLS in output and convert to integers for some fields
+    for column in ['platform_type', 'station_type']:
+        merged[column] = merged.apply(lambda x: _default_to_null(x, column, dtype=int), axis=1)
 
     # Add the location column
     location = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
