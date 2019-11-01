@@ -44,8 +44,6 @@ ALTER TABLE lite.observations ADD COLUMN location geography(Point, 4326);
 
 ```
 
-```
-
 The last field, `location` is a spatial field generated from the `latitude` and
 `longitude` fields.
 
