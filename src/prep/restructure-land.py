@@ -70,6 +70,10 @@ import click
 BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/land'
 BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/land'
 
+# For logging
+VERBOSE = 0
+DRY_RUN = False
+
 hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name']
 
 ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
@@ -106,6 +110,9 @@ def get_df(paths, ftype):
     
     data_frames = [pd.read_csv(f, sep='|') for f in paths]
 
+    # Drop duplicates
+    [_.drop_duplicates(inplace=True) for _ in data_frames]
+
     if ftype == 'head':
         fields = hfields + merge_fields
     elif ftype == 'obs':
@@ -115,6 +122,9 @@ def get_df(paths, ftype):
     data_frames = [_.drop(columns=droppers) for _ in data_frames]
     
     df = pd.concat(data_frames)
+
+    # Drop duplicates in concatenated DataFrame
+    df.drop_duplicates(inplace=True)
     return df, data_frames
 
 
@@ -145,13 +155,19 @@ def get_output_paths(batch_id, year):
 
 
 def log(log_type, outputs, msg=''):
+
     log_path = outputs[f'{log_type}_path']
-    with open(log_path, 'w') as writer:
-        writer.write(msg)
+
+    if not DRY_RUN:
+        with open(log_path, 'w') as writer:
+            writer.write(msg)
 
     log_level = {'success': 'INFO', 'failure': 'ERROR'}[log_type]
     message = msg or f'Wrote: {log_path}'
     print(f'[{log_level}] {message}') 
+
+    if log_type == 'success':
+        print(f'[{log_level}] Wrote success file: {log_path}')
 
 
 def get_observations_files(headers):
@@ -171,7 +187,17 @@ def _set_platform_type(x):
         return 'NULL'
 
     return x['platform_type']
- 
+
+
+def _equal_or_slightly_less(a, b, threshold=5):
+    if a == b: return True
+
+    if (b - a) < 0 or (b - a) > threshold:
+        return False
+
+    print(f'[WARN] Lengths of main DataFrame ({a}) does not equal length of component DataFrames ({b}).')
+    return True 
+
 
 def process_year(batch_id, year, headers):
     """
@@ -208,21 +234,37 @@ def process_year(batch_id, year, headers):
     # CHECK: observations file exists for each header file
         log('failure', outputs, str(err))
         return
-   
-    print(f'[INFO] Reading header files: {headers[0]} , etc.')
+  
+    if VERBOSE: 
+        print(f'[INFO] Reading header files:')
+        for _ in headers:
+            print(f'\tHEADER FILE: {_}')
+    else:
+        print(f'[INFO] Reading header files: {headers[0]} , etc.')
+
     head, _head_dfs = get_df(headers, 'head')
     # CHECK: lengths of concatenated df equals sum of individual dfs
-    if len(head) != sum([len(_) for _ in _head_dfs]):
-        log('failure', outputs, f'Header data frame does not match length of individual frames')
+    l_head = len(head)
+    l_head_dfs = sum([len(_) for _ in _head_dfs]) 
+    if not _equal_or_slightly_less(l_head, l_head_dfs):
+        log('failure', outputs, f'Header data frame ({l_head}) length and individual frame lengths ({l_head_dfs}) need checking')
         return
 
     del _head_dfs
 
-    print(f'[INFO] Reading obs files: {observers[0]} , etc.')
+    if VERBOSE:
+        print(f'[INFO] Reading observation files:')
+        for _ in observers:
+            print(f'\tOBSERVATIONS FILE: {_}')
+    else:
+        print(f'[INFO] Reading observation files: {observers[0]} , etc.')
+
     obs, _obs_dfs = get_df(observers, 'obs')
     # CHECK: lengths of concatenated df equals sum of individual dfs
-    if len(obs) != sum([len(_) for _ in _obs_dfs]):
-        log('failure', outputs, f'Observation data frame does not match length of individual frames')
+    l_obs = len(obs)
+    l_obs_dfs = sum([len(_) for _ in _obs_dfs])
+    if not _equal_or_slightly_less(l_obs, l_obs_dfs):
+        log('failure', outputs, f'Observation data frame ({l_obs}) length and individual frame lengths ({l_obs_dfs}) need checking')
         return
 
     del _obs_dfs
@@ -232,8 +274,11 @@ def process_year(batch_id, year, headers):
     merged = obs.merge(head, on=merge_fields, how='left')
 
     # CHECK: length of observations matches length of merged table
-    if (len(obs) != len(merged)):
-        log('failure', outputs, 'Lengths of obs and merged are different')
+    l_obs = len(obs)
+    l_merged = len(merged)
+
+    if l_obs != l_merged:
+        log('failure', outputs, f'Lengths of obs ({l_obs}) and merged ({l_merged}) are different.')
         return
 
     # Delete header and obs
@@ -269,21 +314,36 @@ def process_year(batch_id, year, headers):
     merged['location'] = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
 
     # Write output file
-    print(f'[INFO] Writing output file: {outputs["output_path"]}')
-    try:
-        merged.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.3f', 
+    if not DRY_RUN:
+        print(f'[INFO] Writing output file: {outputs["output_path"]}')
+        try:
+            merged.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.3f', 
                       columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z')
-        log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
-    except Exception as err:
-        log('failure', outputs, 'Could not write output to PSV file')
+            log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
+
+            # Remove any previous failure file if exists
+            failure_file = outputs['failure_path']
+            if os.path.isfile(failure_file):
+                os.remove(failure_file)
+
+        except Exception as err:
+            log('failure', outputs, 'Could not write output to PSV file')
+
+    else:
+        print('[INFO] Not writing output in DRY RUN mode.')
 
 
-def get_year_file_dict(batch_id):
+def get_year_file_dict(batch_id, header_file=None):
 
     _batcher = _get_batcher()
     headers = _batcher.get(batch_id)
 
+    # Filter if specific `header_file` is provided
+    if header_file:
+        headers = [_ for _ in headers if header_file in _] 
+
     resp = {}
+
     for head in headers:
 
         year = int(os.path.basename(head).split('.')[-2])
@@ -294,16 +354,17 @@ def get_year_file_dict(batch_id):
 
 
 @click.command()
-@click.option('--wait/--no-wait', default=False)
+@click.option('--wait/--no-wait', default=False, help='Short wait (to avoid scheduling problems')
+@click.option('--dry-run/--no-dry-run', default=False, help='Run without writing files (dry run)')
 @click.option('-b', '--batch-id', 'batch_id', required=True, help='Batch to process.')
-def main(wait, batch_id):
+@click.option('-H', '--header-file', 'header_file', required=False, 
+              help='Full file name of Header File (useful for identifying failures).')
+@click.option('-y', '--year', 'year', required=False, type=int,
+              help='Year to be processed (useful for identifying failures).')
+@click.option('-v', '--verbose', 'verbose', count=True, help='Verbose output.')
+def main(wait, dry_run, batch_id, header_file=None, year=None, verbose=0):
     """
-For a given <batch_id>:
- - get list of header dirs
- - gather years:
-
- - for each <year>:
-"""
+    """
 
     # The `wait` argument is used when running in batch mode. Since the process starts
     # by reading the same headers file we don't want them all executing at the same time.
@@ -312,12 +373,27 @@ For a given <batch_id>:
         print(f'[INFO] Pausing for {nap} seconds to vary header file reading...')
         time.sleep(nap)
 
-    year_file_dict = get_year_file_dict(batch_id)    
+    # Tidy up `header_file` if provided
+    if header_file:
+        header_file = os.path.basename(header_file).split('.')[0]
+
+    global VERBOSE
+    VERBOSE = verbose
+
+    global DRY_RUN
+    DRY_RUN = dry_run
+
+    year_file_dict = get_year_file_dict(batch_id, header_file=header_file)    
     years = sorted(year_file_dict.keys())
 
-    for year in years:
-        header_files = year_file_dict[year]
-        process_year(batch_id, year, header_files)
+    for yr in years:
+
+        # If user specifies year then only process that one
+        if year != None and yr != year: 
+            continue
+
+        header_files = year_file_dict[yr]
+        process_year(batch_id, yr, header_files)
 
 
 if __name__ == '__main__':
