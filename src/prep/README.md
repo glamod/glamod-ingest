@@ -73,18 +73,21 @@ $ more l-obs.txt
 
  - There are the same number of header and observations files.
  - Look at the lengths for some example files:
+ 
+ ```
 (venv) $ wc -l /gws/nopw/j04/c3s311a_lot2/data/glamod_land_delivery_2018_12_31_Beta/header_table/daily/T3_protect/header_table_BETA_ACW00011604_1.psv
-227 /gws/nopw/j04/c3s311a_lot2/data/glamod_land_delivery_2018_12_31_Beta/header_table/daily/T3_protect/header_table_BETA_ACW00011604_1.psv
+227 
 
 (venv) $ wc -l /gws/nopw/j04/c3s311a_lot2/data/glamod_land_delivery_2018_12_31_Beta/observations_table/daily/T3_protect/observation_table_BETA_ACW00011604_1.psv
-1102 /gws/nopw/j04/c3s311a_lot2/data/glamod_land_delivery_2018_12_31_Beta/observations_table/daily/T3_protect/observation_table_BETA_ACW00011604_1.psv
+1102 
+```
 
 ### How to process the daily data
 
 Need to batch all input data into:
-  - $BASEDIR/cdmlite/land/<report_type>/<yyyy>/<mm>/<report_type>-<yyyy>-<mm>-<input-code>.psv
+  - `$BASEDIR/cdmlite/land/<report_type>/<yyyy>/<mm>/<report_type>-<yyyy>-<mm>-<input-code>.psv`
 
 Maybe then batch them again into BIG files:
- -  $BASEDIR/cdmlite/land/<report_type>/batches/<yyyy>/<mm>/<report_type>-<yyyy>-<mm>.psv
+ -  `$BASEDIR/cdmlite/land/<report_type>/batches/<yyyy>/<mm>/<report_type>-<yyyy>-<mm>.psv`
 
 
