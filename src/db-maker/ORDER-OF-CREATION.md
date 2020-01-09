@@ -1,5 +1,6 @@
 # Order
 
+```
 make-scripts.sh
 create-schema.sql 
 create-table.sql
@@ -12,5 +13,5 @@ add-observation-triggers.sql
 
 NOTE: The following probably never worked:
  validate-observation-triggers.sql
-
+```
 
