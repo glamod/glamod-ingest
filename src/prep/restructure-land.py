@@ -222,7 +222,7 @@ def process_year(batch_id, year, files):
 
 
 def _read_years_from_gzipped_psv(fpath):
-    print(f'[DEBUG] Reading: {fpath}')
+    print(f'[INFO] Reading: {fpath} to detect years.')
     df = pd.read_csv(fpath, sep='|')
     return sorted(list(set([_.year for _ in pd.to_datetime(df['date_time'], utc=True)])))
 
@@ -232,7 +232,6 @@ def get_year_file_dict(batch_id):
     _batcher = _get_batcher()
     files = _batcher.get(batch_id)
 
-    print(files)
     resp = {}
 
     for f in files:
