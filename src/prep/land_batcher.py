@@ -44,7 +44,7 @@ class LandBatcher(object):
 
         for f in input_files:
             if f.startswith(prefix):
-                files.extend(f)
+                files.append(f)
 
         return files
 
@@ -61,7 +61,7 @@ class LandBatcher(object):
 def test():
 
     x = LandBatcher()
-    batch_id = x.batches[10]
+    batch_id = x.batches[0]
     fs = x.get(batch_id)
     print(fs[0])
     print(len(fs))
