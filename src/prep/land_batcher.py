@@ -2,7 +2,7 @@ import os
 import glob
 import pandas as pd
 
-BATCH_FILE = '../data/land_batch_rules.txt'
+BATCH_FILE = '../data/land_cdmlite_batch_rules.txt'
 HEADER_DIRS_LIST = '../data/header_dirs.txt'
 
 COMMON_BASE_DIR = '/gws/nopw/j04/c3s311a_lot2/data/beta_fix7'

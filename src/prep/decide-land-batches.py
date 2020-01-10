@@ -10,18 +10,15 @@ Read all header files and sort into sensible batches to process together.
 
 import os
 
-COMMON_BASE = '/gws/nopw/j04/c3s311a_lot2/data/beta_fix7/header_table/'
-HEADER_DIRS = [_.replace(COMMON_BASE, '') for _ in open('../data/header_dirs.txt').read().strip().split()]
+COMMON_BASE = '/gws/nopw/j04/c3s311a_lot2/data/level2/land/cdm_lite/'
+INPUT_FILES = [_.replace(COMMON_BASE, '') for _ in open('../data/cdmlite-input-files.txt').read().strip().split()]
 
-LAND_BATCH_RULES = '../data/land_batch_rules.txt'
+LAND_BATCH_RULES = '../data/land_cdmlite_batch_rules.txt'
 
 base_dirs = [
-    'daily/T1',
-    'daily/T3_protect',
+    'daily',
     'monthly',
-    'sub_daily/AFWA_protect',
-    'sub_daily/ICAO_protect',
-    'sub_daily/WMO_protect'
+    'sub_daily'
 ]
 
 
@@ -30,9 +27,9 @@ def write_header():
         writer.write('path_prefix|batch_id|of_n_batches|batch_length\n')
 
 
-def fix_batches(dr, paths):
+def fix_batches(path, paths):
 
-    indx = len(dr + '/')
+    indx = len(path + '/')
     paths = [_[indx:] for _ in paths]
 
     for n in range(1, 100):
@@ -52,11 +49,11 @@ def fix_batches(dr, paths):
         inp = input('Fix? ')
 
         if inp.strip() != '':
-            print(f'[INFO] FIXING: {dr}/{key}')
+            print(f'[INFO] FIXING: {path}/{key}')
             with open(LAND_BATCH_RULES, 'a') as writer:
 
                 for key in sorted(d.keys()):
-                    s = f'{dr}/{key}*|{dr.replace("/", "-")}-{key}|{len(d)}|{len(d[key])}'
+                    s = f'{path}/{key}*|{path.replace("/", "-")}-{key}|{len(d)}|{len(d[key])}'
 #                    print(s)
                     writer.write(s + '\n')
 
@@ -67,10 +64,10 @@ def main():
 
     write_header()
 
-    for dr in base_dirs:
+    for path in base_dirs:
 
-        paths = [_ for _ in HEADER_DIRS if _.startswith(dr)]   
-        batches = fix_batches(dr, paths) 
+        paths = [_ for _ in INPUT_FILES if _.startswith(path)]   
+        batches = fix_batches(path, paths) 
 
 
 if __name__ == '__main__':
