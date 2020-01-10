@@ -36,15 +36,15 @@ class LandBatcher(object):
         if batch_id not in self.batches:
             raise KeyError(f'Batch not found: {batch_id}')
 
-        files = self.get_file_list()
+        input_files = self.get_file_list()
         path_prefix = self._df[self._df['batch_id'] == batch_id]['path_prefix'].tolist()[0].strip('*')
 
         prefix = os.path.join(BASE_DIR, path_prefix)
         files = []
 
-        for f in files:
+        for f in input_files:
             if f.startswith(prefix):
-                files.extend(glob.glob(f'{f}/*.psv')) 
+                files.extend(f)
 
         return files
 
