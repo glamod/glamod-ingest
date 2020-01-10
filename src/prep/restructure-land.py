@@ -43,12 +43,6 @@ BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/ingest/log/r202001/cdmlite/prep/land'
 VERBOSE = 0
 DRY_RUN = False
 
-inf_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning',
-'observation_duration', 'longitude', 'latitude', 'report_type',
-'height_above_surface', 'observed_variable', 'units', 'observation_value',
-'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name',
-'quality_flag', 'location']
-
 time_field = 'date_time'
 
 out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
@@ -91,14 +85,20 @@ def get_df(paths):
     return df, data_frames
 
 
+def get_report_type(batch_id):
+    _batcher = _get_batcher()
+    report_type = str(_batcher.get_report_type(batch_id))
+    return report_type
+
+
 def get_output_paths(batch_id, year):
 
-    _batcher = _get_batcher()
-
     # BASE/<report_type>/<yyyy>/<report_type>-<yyyy>-<batch_id>.psv
-    report_type = str(_batcher.get_report_type(batch_id))
+    report_type = get_report_type(batch_id)
     
     year_file = f'{report_type}-{year}-{batch_id}.psv'
+    gzip_file = f'{year_file}.gz'
+
     year = str(year)
 
     success_dir = os.path.join(BASE_LOG_DIR, 'success', report_type)
@@ -109,8 +109,7 @@ def get_output_paths(batch_id, year):
         if not os.path.isdir(_):
             os.makedirs(_)
 
-    d = {'year_file': year_file,
-         'output_path': os.path.join(output_dir, year_file),
+    d = {'output_path':  os.path.join(output_dir, gzip_file),
          'success_path': os.path.join(success_dir, year_file),
          'failure_path': os.path.join(failure_dir, year_file)
         }
@@ -181,6 +180,10 @@ def process_year(batch_id, year, files):
 
     del _partial_dfs
 
+    # Fix column errors
+    column_name_mapper = {'data_policy_licence ': 'data_policy_licence'}
+    df.rename(columns=column_name_mapper, inplace=True)
+
     # Make sure the time field is time
     df[time_field] = pd.to_datetime(df[time_field], utc=True) 
 
@@ -197,6 +200,10 @@ def process_year(batch_id, year, files):
  
     # Modify platform type where it is not defined
     df['platform_type'] = df.apply(lambda x: _set_platform_type(x), axis=1) 
+
+    # Set 'report_type'
+    report_type = get_report_type(batch_id)
+    df['report_type'] = report_type
     
     # Add the location column
     df['location'] = df.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
@@ -204,9 +211,9 @@ def process_year(batch_id, year, files):
     # Write output file
     if not DRY_RUN:
         print(f'[INFO] Writing output file: {outputs["output_path"]}')
-        try:
+        if 1: #try:
             df.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.3f', 
-                      columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z')
+                      columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z', compression='gzip')
             log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
 
             # Remove any previous failure file if exists
@@ -214,7 +221,7 @@ def process_year(batch_id, year, files):
             if os.path.isfile(failure_file):
                 os.remove(failure_file)
 
-        except Exception as err:
+        else: #except Exception as err:
             log('failure', outputs, 'Could not write output to PSV file')
 
     else:
