@@ -3,23 +3,9 @@ import glob
 import pandas as pd
 
 BATCH_FILE = '../data/land_cdmlite_batch_rules.txt'
-HEADER_DIRS_LIST = '../data/header_dirs.txt'
+FILE_LIST = '../data/INPUT_FILES.txt'
 
-COMMON_BASE_DIR = '/gws/nopw/j04/c3s311a_lot2/data/beta_fix7'
-HEADER_BASE_DIR = os.path.join(COMMON_BASE_DIR, 'header_table')
-OBSERVATION_BASE_DIR = os.path.join(COMMON_BASE_DIR, 'observations_table')
-
-HEADER_DIRS = None
-
-
-def get_header_file_list():
-    global HEADER_DIRS
-
-    if not HEADER_DIRS:
-        print('[INFO] Loading header list...')
-        HEADER_DIRS = open(HEADER_DIRS_LIST).read().strip().split()
-
-    return HEADER_DIRS
+BASE_DIR = '/gws/nopw/j04/c3s311a_lot2/data/level2/land/cdm_lite/'
 
 
 class LandBatcher(object):
@@ -27,9 +13,17 @@ class LandBatcher(object):
     Columns are: path_prefix|batch_id|n_batches|batch_length
     """
 
+    def get_file_list(self):
+        if not self._input_files:
+            print('[INFO] Loading file list...')
+            self._input_files = open(FILE_LIST).read().strip().split()
+
+        return self._input_files
+
     def __init__(self, batch_file=BATCH_FILE):
         self._batch_file = batch_file
         self._load()
+        self._input_files = None
 
     def _load(self):
         self._df = pd.read_csv(self._batch_file, sep='|')
@@ -38,25 +32,19 @@ class LandBatcher(object):
     def get_batches(self):
         return self.batches[:]
 
-    def get(self, batch_id, ftype='header'):
+    def get(self, batch_id):
         if batch_id not in self.batches:
             raise KeyError(f'Batch not found: {batch_id}')
 
-        header_files = get_header_file_list()        
+        files = self.get_file_list()
         path_prefix = self._df[self._df['batch_id'] == batch_id]['path_prefix'].tolist()[0].strip('*')
 
-        prefix = os.path.join(HEADER_BASE_DIR, path_prefix)
+        prefix = os.path.join(BASE_DIR, path_prefix)
         files = []
 
-        for f in header_files:
+        for f in files:
             if f.startswith(prefix):
                 files.extend(glob.glob(f'{f}/*.psv')) 
-
-        if ftype.startswith('obs'):
-        # Observation paths need mapping 
-            files = [_.replace('header_table/', 'observations_table/') \
-                      .replace('header_table', 'observation_table') \
-                      for _ in files] 
 
         return files
 
@@ -79,7 +67,6 @@ def test():
     print(len(fs))
     print(x.get_report_type(batch_id))
     print(x.get_batches()[:5], '...')
-    print(x.get(batch_id, 'observations')[0])
 
 
 if __name__ == '__main__':
