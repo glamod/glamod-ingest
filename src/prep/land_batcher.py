@@ -3,7 +3,7 @@ import glob
 import pandas as pd
 
 BATCH_FILE = '../data/land_cdmlite_batch_rules.txt'
-FILE_LIST = '../data/INPUT_FILES.txt'
+FILE_LIST = '../data/cdmlite_input_files.txt'
 
 BASE_DIR = '/gws/nopw/j04/c3s311a_lot2/data/level2/land/cdm_lite/'
 
