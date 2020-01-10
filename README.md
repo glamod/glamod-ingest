@@ -2,7 +2,7 @@
 
 Ingestion tools for land and marine data. The ingestion covers both:
  1. Full CDM database
- 2. "cdmlite" database.
+ 2. "cdmlite" database
 
 ## The CDM-lite
 
