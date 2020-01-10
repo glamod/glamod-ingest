@@ -11,7 +11,7 @@ Read all header files and sort into sensible batches to process together.
 import os
 
 COMMON_BASE = '/gws/nopw/j04/c3s311a_lot2/data/level2/land/cdm_lite/'
-INPUT_FILES = [_.replace(COMMON_BASE, '') for _ in open('../data/cdmlite-input-files.txt').read().strip().split()]
+INPUT_FILES = [_.replace(COMMON_BASE, '') for _ in open('../data/cdmlite_input_files.txt').read().strip().split()]
 
 LAND_BATCH_RULES = '../data/land_cdmlite_batch_rules.txt'
 
