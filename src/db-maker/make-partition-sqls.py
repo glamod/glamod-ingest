@@ -11,8 +11,7 @@ Writes sql scripts to create partitions.
 import sys
 
 
-database = sys.argv[1]
-schema = sys.argv[2]
+schema = sys.argv[1]
 
 stations = {
     'land':   {'report': {0, 2, 3}, 'start': 1761},
@@ -27,8 +26,6 @@ inv_stations = {
 START_YEAR = 1761
 
 outfile = open('create-observation-children.sql', 'w')
-
-print('\connect {}'.format(database), file = outfile)
 
 # generate child tables
 for year in range(START_YEAR, 2019):
@@ -56,10 +53,7 @@ for year in range(START_YEAR, 2019):
 outfile.close()
 
 outfile = open('create-observation-triggers.sql', 'w')
-print('\connect {}'.format(database), file = outfile)
-
 outfile2 = open('validate-observation-triggers.sql','w')
-print('\connect {}'.format(database), file = outfile2)
 
 # Insert triggers
 print( '' )
@@ -120,7 +114,6 @@ outfile.close()
 outfile2.close()
 
 outfile = open('add-observation-triggers.sql','w')
-print('\connect {}'.format(database), file = outfile)
 print( 'CREATE TRIGGER observation_insert_trigger', file = outfile)
 print( 'BEFORE INSERT ON {}.observations'.format(schema), file = outfile)
 print( 'FOR EACH ROW EXECUTE PROCEDURE {}.observation_insert_trigger();'.format(schema), file = outfile)
