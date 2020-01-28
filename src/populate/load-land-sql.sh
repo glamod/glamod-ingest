@@ -7,9 +7,9 @@ if [ ! $REPORT_TYPE ] || [[ ! $REPORT_TYPE =~ ^[023]$ ]]; then
     exit
 fi
 
-BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/land/sql
+BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/land/sql
 sql_dir=$BASE_SQL_DIR/$REPORT_TYPE
-LOG_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/land/populate
+LOG_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/land/populate
 
 mkdir -p $LOG_DIR
 

@@ -9,6 +9,7 @@ fi
 
 NAP=20
 LAST_BATCH_FILE=last-land-batch.txt
+lotus_dir=/gws/smf/j04/c3s311a_lot2/ingest/log-lotus/r202001/cdmlite/prep/land
 lotus_dir=/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/lotus-land
 mkdir -p $lotus_dir
 

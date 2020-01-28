@@ -14,8 +14,8 @@ if [ ! $year ]; then
     exit
 fi
 
-BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/land/${REPORT_TYPE}
-BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/land/sql
+BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/r202001/land/cdmlite/${REPORT_TYPE}
+BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/land/sql
 
 
 ydir=$BASE_OUTPUT_DIR/$year
