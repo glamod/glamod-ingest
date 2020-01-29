@@ -28,7 +28,7 @@ START_YEAR = 1761
 outfile = open('create-observation-children.sql', 'w')
 
 # generate child tables
-for year in range(START_YEAR, 2019):
+for year in range(START_YEAR, 2020):
 
     tmin = '{}-01-01 00:00:0.0+0'.format(year)
     tmax = '{}-01-01 00:00:0.0+0'.format(year + 1)
