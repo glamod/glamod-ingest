@@ -1,4 +1,21 @@
-CREATE TABLE :schema.observations (
+#!/usr/bin/env python
+
+"""
+make-create-partition-sqls.py
+=============================
+
+Writes sql scripts to create partitions.
+
+"""
+
+import sys
+
+
+schema = sys.argv[1]
+
+
+SQL = """
+CREATE TABLE {schema}.observations (
 
     observation_id character varying NOT NULL PRIMARY KEY,
     data_policy_licence integer,
@@ -21,4 +38,10 @@ CREATE TABLE :schema.observations (
 
 );
 
-ALTER TABLE :schema.observations ADD COLUMN location geography(Point, 4326);
+ALTER TABLE {schema}.observations ADD COLUMN location geography(Point, 4326);
+"""
+
+
+outfile = open('create-table.sql','w')
+print(SQL.format(schema=schema), file=outfile)
+outfile.close()
