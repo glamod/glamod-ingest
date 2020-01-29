@@ -24,11 +24,12 @@ inv_stations = {
 }
 
 START_YEAR = 1761
+END_YEAR = 2019
 
 outfile = open('create-observation-children.sql', 'w')
 
 # generate child tables
-for year in range(START_YEAR, 2020):
+for year in range(START_YEAR, END_YEAR + 1):
 
     tmin = '{}-01-01 00:00:0.0+0'.format(year)
     tmax = '{}-01-01 00:00:0.0+0'.format(year + 1)
@@ -61,7 +62,7 @@ print( 'CREATE OR REPLACE FUNCTION {}.observation_insert_trigger()'.format(schem
 print( '    RETURNS TRIGGER AS $$', file = outfile)
 print( '    BEGIN', file = outfile)
 
-for year in range(START_YEAR, 2019):
+for year in range(START_YEAR, END_YEAR + 1):
 
     tmin = '{}-01-01 00:00:0.0+0'.format(year)
     tmax = '{}-01-01 00:00:0.0+0'.format(year + 1)
