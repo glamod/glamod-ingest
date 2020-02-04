@@ -9,11 +9,12 @@ fi
 
 NAP=20
 LAST_BATCH_FILE=last-land-batch.txt
-lotus_dir=/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/lotus-land
+lotus_dir=/gws/smf/j04/c3s311a_lot2/ingest/log-lotus/r202001/cdmlite/prep/land
 mkdir -p $lotus_dir
 
-cd /gws/smf/j04/c3s311a_lot2/astephen/glamod-cdm-lite/
-source venv/bin/activate
+#TODO:
+#cd /path/to/repo
+#source venv/bin/activate
 cd src/prep/
 
 batches=$(python get-all-land-batches.py)

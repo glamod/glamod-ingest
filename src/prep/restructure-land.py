@@ -68,9 +68,21 @@ def _get_batcher():
     return batcher
 
     
-def get_df(paths):
+def get_df(paths, year):
+    """
+    Reads a list of paths, parses data into DataFrames, filters by year, then 
+    Concatenates them together.
+
+    Returns: (DataFrame, [list of sub-DataFrames])
+    """
     
-    data_frames = [pd.read_csv(f, sep='|') for f in paths]
+    data_frames = [pd.read_csv(f, sep='|', parse_dates=[time_field]) for f in paths]
+
+    # Only keep the required `year`
+    print(f'[INFO] Lengths of data frames before filtering years: {[len(_) for _ in data_frames]}')
+    data_frames = [_[_.date_time.dt.year == year] for _ in data_frames]
+
+    print(f'[INFO] Lengths of data frames AFTER filtering years: {[len(_) for _ in data_frames]}')
 
     # Drop duplicates
     [_.drop_duplicates(inplace=True) for _ in data_frames]
@@ -97,7 +109,7 @@ def get_output_paths(batch_id, year):
     report_type = get_report_type(batch_id)
     
     year_file = f'{report_type}-{year}-{batch_id}.psv'
-    gzip_file = f'{year_file}.gz'
+    gzip_file = f'{year_file}'
 
     year = str(year)
 
@@ -168,7 +180,7 @@ def process_year(batch_id, year, files):
     else:
         print(f'[INFO] Reading input files: {files[0]} , etc.')
 
-    df, _partial_dfs = get_df(files)
+    df, _partial_dfs = get_df(files, year)
 
     # CHECK: lengths of concatenated df equals sum of individual dfs
     l_df = len(df)
@@ -211,9 +223,9 @@ def process_year(batch_id, year, files):
     # Write output file
     if not DRY_RUN:
         print(f'[INFO] Writing output file: {outputs["output_path"]}')
-        if 1: #try:
+        try:
             df.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.3f', 
-                      columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z', compression='gzip')
+                      columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z')
             log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
 
             # Remove any previous failure file if exists
@@ -221,7 +233,7 @@ def process_year(batch_id, year, files):
             if os.path.isfile(failure_file):
                 os.remove(failure_file)
 
-        else: #except Exception as err:
+        except Exception as err:
             log('failure', outputs, 'Could not write output to PSV file')
 
     else:
