@@ -8,6 +8,11 @@ Writes sql scripts to create partitions.
 
 """
 
+import sys
+
+
+schema = sys.argv[1]
+
 stations = {
     'land':   {'report': {0, 2, 3}, 'start': 1761},
     'marine': {'report': {0}, 'start': 1946},
@@ -19,13 +24,12 @@ inv_stations = {
 }
 
 START_YEAR = 1761
+END_YEAR = 2019
 
 outfile = open('create-observation-children.sql', 'w')
 
-print('\connect cdmlite', file = outfile)
-
 # generate child tables
-for year in range(START_YEAR, 2019):
+for year in range(START_YEAR, END_YEAR + 1):
 
     tmin = '{}-01-01 00:00:0.0+0'.format(year)
     tmax = '{}-01-01 00:00:0.0+0'.format(year + 1)
@@ -36,12 +40,12 @@ for year in range(START_YEAR, 2019):
     
         for report in values['report']:
         
-           table_name = 'lite.observations_{}_{}_{}'.format( year, station, report )
+           table_name = '{}.observations_{}_{}_{}'.format( schema, year, station, report )
            table_short = 'observations_{}_{}_{}'.format( year, station, report )
            station_constraint = inv_stations[station]
            
            print('')
-           print( 'create table {}() inherits ( lite.observations );'.format( table_name ), file = outfile )
+           print( 'create table {}() inherits ( {}.observations );'.format( table_name, schema ), file = outfile )
            print( 'alter table {} add constraint {}_pk primary key (observation_id);'.format( table_name, table_short ), file = outfile )
            print( 'alter table {} add constraint {}_report check( report_type = {});'.format( table_name, table_short, report), file = outfile)
            print( 'alter table {} add constraint {}_station check( station_type = {} );'.format(table_name, table_short, station_constraint) , file = outfile)
@@ -50,18 +54,15 @@ for year in range(START_YEAR, 2019):
 outfile.close()
 
 outfile = open('create-observation-triggers.sql', 'w')
-print('\connect cdmlite', file = outfile)
-
 outfile2 = open('validate-observation-triggers.sql','w')
-print('\connect cdmlite', file = outfile2)
 
 # Insert triggers
 print( '' )
-print( 'CREATE OR REPLACE FUNCTION lite.observation_insert_trigger()', file = outfile)
+print( 'CREATE OR REPLACE FUNCTION {}.observation_insert_trigger()'.format(schema), file = outfile)
 print( '    RETURNS TRIGGER AS $$', file = outfile)
 print( '    BEGIN', file = outfile)
 
-for year in range(START_YEAR, 2019):
+for year in range(START_YEAR, END_YEAR + 1):
 
     tmin = '{}-01-01 00:00:0.0+0'.format(year)
     tmax = '{}-01-01 00:00:0.0+0'.format(year + 1)
@@ -80,13 +81,13 @@ for year in range(START_YEAR, 2019):
             
         counter2 = 0
         for report in values['report']:
-            table_name = 'lite.observations_{}_{}_{}'.format( year, station, report )
+            table_name = '{}.observations_{}_{}_{}'.format( schema, year, station, report )
             table_short = 'observations_{}_{}_{}'.format( year, station, report )
 
             print('CREATE TRIGGER observation_insert_check_{}_{}_{} BEFORE INSERT ON'.format(year, station, report), file = outfile2)
             print('    {}'.format( table_name ), file = outfile2)
             print('FOR EACH ROW', file = outfile2)
-            print('    EXECUTE PROCEDURE lite.validate_observations();', file = outfile2)
+            print('    EXECUTE PROCEDURE {}.validate_observations();'.format(schema), file = outfile2)
 
             if( counter2 == 0):
                 print('                IF NEW.report_type = {} THEN'.format(report) , file = outfile)
@@ -114,10 +115,9 @@ outfile.close()
 outfile2.close()
 
 outfile = open('add-observation-triggers.sql','w')
-print('\connect cdmlite', file = outfile)
 print( 'CREATE TRIGGER observation_insert_trigger', file = outfile)
-print( 'BEFORE INSERT ON lite.observations', file = outfile)
-print( 'FOR EACH ROW EXECUTE PROCEDURE lite.observation_insert_trigger();', file = outfile)
+print( 'BEFORE INSERT ON {}.observations'.format(schema), file = outfile)
+print( 'FOR EACH ROW EXECUTE PROCEDURE {}.observation_insert_trigger();'.format(schema), file = outfile)
 outfile.close()
 
 
