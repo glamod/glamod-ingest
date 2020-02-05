@@ -25,6 +25,11 @@ It follows a structure:
 
  {BASE_INPUT_DIR}/<dr>/{observations-*,header}-<year>-<month>-<revision>-<other>.psv
 
+E.g.:
+
+ /group_workspaces/jasmin2/glamod_marine/data/r092019/ICOADS_R3.0.0T/level2/001-110/header-1950-01-r092019-000000.psv
+ /group_workspaces/jasmin2/glamod_marine/data/r092019/ICOADS_R3.0.0T/level2/001-110/observations-at-1950-01-r092019-000000.psv
+
 Example file names:
 
  header-1946-01-r092019-000000.psv
@@ -32,6 +37,10 @@ Example file names:
 
 Outputs are written to:
  {BASE_OUTPUT_DIR}/<dr>/<year>-<revision>-<other>.psv
+
+E.g.:
+
+ 
  
 Sucess/Failure is indicated by file existence:
  {BASE_LOG_DIR}/success/<dr>/<year>-<revision>-<other>.psv
@@ -58,18 +67,19 @@ For each <year> in <years>:
 
 """
 
-import os, re, glob, sys
+import os, re, glob, sys, time
 
 import pandas as pd
 import click
 
 
-#BASE_INPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019/ICOADS_R3.0.0T/level1a'
-BASE_INPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019/ICOADS_R3.0.0T/level1e'
+#BASE_INPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019/ICOADS_R3.0.0T/level1e'
+BASE_INPUT_DIR = '/group_workspaces/jasmin2/glamod_marine/data/r092019/ICOADS_R3.0.0T/level2'
 # _EG_SUB_DIR = '001-110'
-BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine'
+#BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine'
+BASE_OUTPUT_DIR = '/work/scratch-nompiio/astephen/glamod/r202001/cdmlite/marine'
 # .../gws/nopw/j04/c3s311a_lot2/data/marine/r092019_cdm_lite/ICOADS_R3.0.0T/level1a'
-BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/cdmlite/log/prep/marine'
+BASE_LOG_DIR = '/gws/smf/j04/c3s311a_lot2/cdmlite/log/r202001/prep/marine'
 
 FILE_PATTN = re.compile('^(observations|header)-?(\w+)?-(?P<year>\d{4})-(\d{2})-(?P<revision>r\d{1,})-(?P<other>\d{1,})\.psv')
 
@@ -92,10 +102,13 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 
 renamers = {'observation_height_above_station_surface': 'height_above_surface'}
 
-year_range = (1946, 2010)
+header_files = [os.path.basename(_) for _ in glob.glob(f'{BASE_INPUT_DIR}/*/header-*.psv')]
+years = sorted(list(set([int(_.split('-')[1]) for _ in header_files])))
+year_range = years[0], years[-1]
 
-EXCLUDE_DIRS = ['063-714']
-
+# Emptying exclusions - should now all work
+#EXCLUDE_DIRS = ['063-714']
+EXCLUDE_DIRS = []
 
 
 def _resolve_absolute_dir(dr):
@@ -167,7 +180,7 @@ def log(log_type, outputs, msg=''):
     print(f'[{log_level}] {message}') 
 
 
-def _default_to_null(x, column, dtype=None):
+def OLD_default_to_null(x, column, dtype=None):
     """
     If no value then insert "NULL".
     If `dtype` function set then use that to convert real values.
@@ -180,6 +193,34 @@ def _default_to_null(x, column, dtype=None):
         value = dtype(value)
 
     return value
+
+
+def default_column_to_null(df, column, as_int=False):
+    """
+    If no value then insert "NULL".
+    If `as_int` then convert to int then string.
+    """
+    series = df[column]
+
+    if as_int:
+        df[column] = series[series.notnull()].apply(lambda item: str(int(item)))
+
+    df[column][df[column].isnull()] = 'NULL'
+
+
+def add_location_column(df):
+    """
+    Updates DataFrame `df` by adding a `location` string column,
+    created from columns: `latitude` and `longitude`.
+    """ 
+    lat = df['latitude']
+    lon = df['longitude']
+
+    locs = ['SRID=4326;POINT({:.3f} {:.3f})'.format(lat[idx], lon[idx]) for idx in range(len(lat))]
+
+    df['location'] = locs
+    #    merged['location'] = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
+
 
 
 def process_year(dr, year):
@@ -206,6 +247,8 @@ def process_year(dr, year):
    
     print(f'[INFO] Reading header files: {headers[0]} , etc.')
     head, _head_dfs = get_df(headers, 'head')
+    head_length = len(head)
+
     # CHECK: lengths of concatenated df equals sum of individual dfs
     if len(head) != sum([len(_) for _ in _head_dfs]):
         log('failure', outputs, f'Header data frame does not match length of individual frames')
@@ -215,6 +258,12 @@ def process_year(dr, year):
 
     print(f'[INFO] Exclude records where `report_quality` is NOT 0.')
     head = head[head['report_quality'] == 0]
+    head_length_filtered = len(head)
+    
+    # These are not errors but we log them as WARNINGS
+    if head_length != head_length_filtered:
+        n_diff = head_length - head_length_filtered
+        print(f'[WARN] Found {n_diff} records where `report_quality` was NOT 0.')
 
     print(f'[INFO] Reading obs files: {observers[0]} , etc.')
     obs, _obs_dfs = get_df(observers, 'obs')
@@ -259,22 +308,38 @@ def process_year(dr, year):
 
     # Rename columns
     merged.rename(columns=renamers, inplace=True)
+
+    # How many records?
+    print(f'[INFO] The size of the merged table is: {len(merged)}')
   
     # Set default report_type to 0 for marine
     print('[INFO] Setting `report_type` to zero')
-    merged['report_type'] = 0
+    merged.loc[:, 'report_type'] = 0
 
     # Fill NULLs in output for fields that might be null in input
     for column in ['height_above_surface', 'primary_station_id', 'station_name']:
-        merged[column] = merged.apply(lambda x: _default_to_null(x, column), axis=1)
+        print(f'[INFO] Filling "{column}" with NULLs if not defined.')
+        start = time.time()
+        x = merged[column]
+        default_column_to_null(merged, column) 
+#        merged[column] = merged.apply(lambda x: _default_to_null(x, column), axis=1)
+        print(f'[TIMER] {time.time() - start:.1f} secs')
 
     # Fill NULLS in output and convert to integers for some fields
     for column in ['platform_type', 'station_type']:
-        merged[column] = merged.apply(lambda x: _default_to_null(x, column, dtype=int), axis=1)
+        print(f'[INFO] Filling "{column}" as INTs if not NULL.')
+#        merged[column] = merged.apply(lambda x: _default_to_null(x, column, dtype=int), axis=1)
+        start = time.time()
+        default_column_to_null(merged, column, as_int=True)
+        print(f'[TIMER] {time.time() - start:.1f} secs')
 
     # Add the location column
-    location = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
-    merged = merged.assign(location=location)
+    print(f'[INFO] Adding location column')
+    start = time.time()
+    add_location_column(merged)   
+#    merged['location'] = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
+    print(f'[TIMER] {time.time() - start:.1f} secs')
+#    merged = merged.assign(location=location)
 
     # Write output file
     print(f'[INFO] Writing output file: {outputs["output_path"]}')

@@ -14,9 +14,11 @@ if [ ! $year ]; then
     exit
 fi
 
-BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine
+#BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine
+BASE_OUTPUT_DIR=/work/scratch-nompiio/astephen/glamod/r202001/cdmlite/marine
 #${REPORT_TYPE}
-BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/marine/sql
+#BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r202001/marine/sql
+BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/marine/sql
 
 
 ydir=$BASE_OUTPUT_DIR/$year
