@@ -213,10 +213,10 @@ def add_location_column(df):
     Updates DataFrame `df` by adding a `location` string column,
     created from columns: `latitude` and `longitude`.
     """ 
-    lat = df['latitude']
     lon = df['longitude']
+    lat = df['latitude']
 
-    locs = ['SRID=4326;POINT({:.3f} {:.3f})'.format(lat[idx], lon[idx]) for idx in range(len(lat))]
+    locs = ['SRID=4326;POINT({:.3f} {:.3f})'.format(lon[idx], lat[idx]) for idx in range(len(lat))]
 
     df['location'] = locs
     #    merged['location'] = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
