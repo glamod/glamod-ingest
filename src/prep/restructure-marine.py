@@ -256,15 +256,6 @@ def process_year(dr, year):
 
     del _head_dfs
 
-    print(f'[INFO] Exclude records where `report_quality` is NOT 0.')
-    head = head[head['report_quality'] == 0]
-    head_length_filtered = len(head)
-    
-    # These are not errors but we log them as WARNINGS
-    if head_length != head_length_filtered:
-        n_diff = head_length - head_length_filtered
-        print(f'[WARN] Found {n_diff} records where `report_quality` was NOT 0.')
-
     print(f'[INFO] Reading obs files: {observers[0]} , etc.')
     obs, _obs_dfs = get_df(observers, 'obs')
     # CHECK: lengths of concatenated df equals sum of individual dfs
@@ -277,11 +268,21 @@ def process_year(dr, year):
     print('[INFO] Merging files')
     # Merge header and observations tables, retaining all obs records
     merged = obs.merge(head, on=merge_fields, how='left')
+    merged_length = len(merged)
 
     # CHECK: length of observations matches length of merged table
-    if (len(obs) != len(merged)):
+    if (len(obs) != merged_length):
         log('failure', outputs, 'Lengths of obs and merged are different')
         return
+
+    print(f'[INFO] Exclude records where `report_quality` is NOT 0.')
+    merged = merged[merged['report_quality'] == 0]
+    merged_length_filtered = len(merged)
+
+    # These are not errors but we log them as WARNINGS
+    if merged_length != merged_length_filtered:
+        n_diff = merged_length - merged_length_filtered
+        print(f'[WARN] Found {n_diff} records where `report_quality` was NOT 0.')
 
     # Delete header and obs
     del head
@@ -290,6 +291,7 @@ def process_year(dr, year):
     # CHECK: there are no NULL values for "report_id" 
     null_fields = merged[merge_fields[0]].isnull().sum()
     if null_fields > 0:
+###!!! CHECK NEVER HAPPENS
         log('failure', outputs, f'Some merge fields ({merge_fields[0]}) are NULL after merge.')
         return
 
@@ -301,6 +303,7 @@ def process_year(dr, year):
 
     # CHECK: all time fields include a real value
     obs_ids_of_bad_time_fields = merged[merged[time_field].isnull()]['observation_id'].unique().tolist()
+###!!! CHECK IF EVER HAPPENS
     if len(obs_ids_of_bad_time_fields) > 0:
         log('failure', outputs, f'Some fields had missing value for {time_field}. Observation IDs were: '
                                 f'{obs_ids_of_bad_time_fields}')
@@ -322,13 +325,11 @@ def process_year(dr, year):
         start = time.time()
         x = merged[column]
         default_column_to_null(merged, column) 
-#        merged[column] = merged.apply(lambda x: _default_to_null(x, column), axis=1)
         print(f'[TIMER] {time.time() - start:.1f} secs')
 
     # Fill NULLS in output and convert to integers for some fields
     for column in ['platform_type', 'station_type']:
         print(f'[INFO] Filling "{column}" as INTs if not NULL.')
-#        merged[column] = merged.apply(lambda x: _default_to_null(x, column, dtype=int), axis=1)
         start = time.time()
         default_column_to_null(merged, column, as_int=True)
         print(f'[TIMER] {time.time() - start:.1f} secs')
@@ -337,9 +338,7 @@ def process_year(dr, year):
     print(f'[INFO] Adding location column')
     start = time.time()
     add_location_column(merged)   
-#    merged['location'] = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
     print(f'[TIMER] {time.time() - start:.1f} secs')
-#    merged = merged.assign(location=location)
 
     # Write output file
     print(f'[INFO] Writing output file: {outputs["output_path"]}')
