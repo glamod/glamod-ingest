@@ -30,6 +30,7 @@ In this case, we have:
 
 We found out:
 
- - If there are ANY bad records: NONE of the records will be loaded
- - But, subsequent PSV files in the loader script WILL be loaded 
+ - If there are ANY bad records in a PSV file: NONE of the records in the PSV file will be loaded
+ - Subsequent PSV files in the loader script WILL be loaded
+
 
