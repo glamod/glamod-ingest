@@ -22,6 +22,6 @@ for sql in $(ls $sql_dir | sort -r); do
     echo "[INFO] Loading data from: $sql_file"
     echo "[INFO] Logging to: $log"
 
-    psql -U glamod_dbroot -h localhost cdmlite -f $sql_file > $log 2>&1 
+    psql -U glamod_root -h localhost cdm -f $sql_file > $log 2>&1 
 
 done
