@@ -7,7 +7,7 @@ if [ ! $mode ]; then
 fi
 
 
-input_dir=/group_workspaces/jasmin2/glamod_marine/data/r092019/ICOADS_R3.0.0T/level2
+input_dir=/group_workspaces/jasmin2/glamod_marine/data/r092019/ICOADS_R3.0.0T/level2_lite_20200210
 lotus_dir=/gws/smf/j04/c3s311a_lot2/cdmlite/log/r202001/prep/marine-lotus
 
 mkdir -p $lotus_dir

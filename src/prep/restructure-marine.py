@@ -74,7 +74,7 @@ import click
 
 
 #BASE_INPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/marine/r092019/ICOADS_R3.0.0T/level1e'
-BASE_INPUT_DIR = '/group_workspaces/jasmin2/glamod_marine/data/r092019/ICOADS_R3.0.0T/level2'
+BASE_INPUT_DIR = '/group_workspaces/jasmin2/glamod_marine/data/r092019/ICOADS_R3.0.0T/level2_lite_20200210'
 # _EG_SUB_DIR = '001-110'
 #BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine'
 BASE_OUTPUT_DIR = '/work/scratch-nompiio/astephen/glamod/r202001/cdmlite/marine'
@@ -101,6 +101,8 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 'quality_flag', 'location']
 
 renamers = {'observation_height_above_station_surface': 'height_above_surface'}
+
+na_values = ['--9999.99', '-99999.9', '-9999.99']
 
 header_files = [os.path.basename(_) for _ in glob.glob(f'{BASE_INPUT_DIR}/*/header-*.psv')]
 years = sorted(list(set([int(_.split('-')[1]) for _ in header_files])))
@@ -134,7 +136,7 @@ def get_input_paths(dr, year):
     
 def get_df(paths, ftype):
     
-    data_frames = [pd.read_csv(f, sep='|') for f in paths]
+    data_frames = [pd.read_csv(f, sep='|', na_values=na_values) for f in paths]
 
     if ftype == 'head':
         fields = hfields + merge_fields
@@ -180,21 +182,6 @@ def log(log_type, outputs, msg=''):
     print(f'[{log_level}] {message}') 
 
 
-def OLD_default_to_null(x, column, dtype=None):
-    """
-    If no value then insert "NULL".
-    If `dtype` function set then use that to convert real values.
-    """
-    if pd.isnull(x[column]):
-        return 'NULL'
-
-    value = x[column]
-    if dtype:
-        value = dtype(value)
-
-    return value
-
-
 def default_column_to_null(df, column, as_int=False):
     """
     If no value then insert "NULL".
@@ -206,6 +193,14 @@ def default_column_to_null(df, column, as_int=False):
         df[column] = series[series.notnull()].apply(lambda item: str(int(item)))
 
     df[column][df[column].isnull()] = 'NULL'
+   
+ #   for null_value in other_nulls:
+ #       if column == 'height_above_surface': print(sorted(df[column].unique().tolist())[:100])
+#
+#        df[column][df[column] == null_value] = 'NULL'
+
+#        if column == 'height_above_surface': print(sorted(df[column].unique().tolist())[:100])
+
 
 
 def add_location_column(df):
@@ -213,14 +208,12 @@ def add_location_column(df):
     Updates DataFrame `df` by adding a `location` string column,
     created from columns: `latitude` and `longitude`.
     """ 
-    lon = df['longitude']
-    lat = df['latitude']
+    lon = df['longitude'].tolist()
+    lat = df['latitude'].tolist()
 
     locs = ['SRID=4326;POINT({:.3f} {:.3f})'.format(lon[idx], lat[idx]) for idx in range(len(lat))]
 
     df['location'] = locs
-    #    merged['location'] = merged.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
-
 
 
 def process_year(dr, year):
@@ -323,7 +316,6 @@ def process_year(dr, year):
     for column in ['height_above_surface', 'primary_station_id', 'station_name']:
         print(f'[INFO] Filling "{column}" with NULLs if not defined.')
         start = time.time()
-        x = merged[column]
         default_column_to_null(merged, column) 
         print(f'[TIMER] {time.time() - start:.1f} secs')
 
