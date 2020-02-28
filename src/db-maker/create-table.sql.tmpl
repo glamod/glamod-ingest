@@ -23,3 +23,8 @@ CREATE TABLE SCHEMA_NAME.observations (
 
 ALTER TABLE SCHEMA_NAME.observations ADD COLUMN location geography(Point, 4326);
 /* UPDATE SCHEMA_NAME.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326); */
+
+/*
+CREATE INDEX date_time_idx ON SCHEMA_NAME.observations (date_time);
+CREATE INDEX observed_variable_idx ON SCHEMA_NAME.observations (observed_variable);
+*/

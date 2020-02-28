@@ -9,22 +9,10 @@ Writes sql scripts to create partitions.
 """
 
 import sys
+sys.path.append('.')
 
+from _common import *
 
-schema = sys.argv[1]
-
-stations = {
-    'land':   {'report': {0, 2, 3}, 'start': 1761},
-    'marine': {'report': {0, 2, 3}, 'start': 1946},
-}
-
-inv_stations = {
-    'land': 1,
-    'marine': 2
-}
-
-START_YEAR = 1761
-END_YEAR = 2019
 
 outfile = open('create-observation-children.sql', 'w')
 
@@ -45,10 +33,10 @@ for year in range(START_YEAR, END_YEAR + 1):
            station_constraint = inv_stations[station]
            
            print('')
-           print( 'create table {}() inherits ( {}.observations );'.format( table_name, schema ), file = outfile )
-           print( 'alter table {} add constraint {}_pk primary key (observation_id);'.format( table_name, table_short ), file = outfile )
-           print( 'alter table {} add constraint {}_report check( report_type = {});'.format( table_name, table_short, report), file = outfile)
-           print( 'alter table {} add constraint {}_station check( station_type = {} );'.format(table_name, table_short, station_constraint) , file = outfile)
+           print('create table {}() inherits ( {}.observations );'.format(table_name, schema ), file = outfile )
+           print('alter table {} add constraint {}_pk primary key (observation_id);'.format(table_name, table_short ), file = outfile )
+           print('alter table {} add constraint {}_report check( report_type = {});'.format(table_name, table_short, report), file = outfile)
+           print('alter table {} add constraint {}_station check( station_type = {} );'.format(table_name, table_short, station_constraint) , file = outfile)
            print( "alter table {} add constraint {}_date check(date_time >= TIMESTAMP WITH TIME ZONE '{}' and date_time < TIMESTAMP WITH TIME ZONE '{}' );".format(table_name, table_short, tmin, tmax ) , file = outfile)
            
 outfile.close()
@@ -57,10 +45,10 @@ outfile = open('create-observation-triggers.sql', 'w')
 outfile2 = open('validate-observation-triggers.sql','w')
 
 # Insert triggers
-print( '' )
-print( 'CREATE OR REPLACE FUNCTION {}.observation_insert_trigger()'.format(schema), file = outfile)
-print( '    RETURNS TRIGGER AS $$', file = outfile)
-print( '    BEGIN', file = outfile)
+print('' )
+print('CREATE OR REPLACE FUNCTION {}.observation_insert_trigger()'.format(schema), file = outfile)
+print('    RETURNS TRIGGER AS $$', file = outfile)
+print('    BEGIN', file = outfile)
 
 for year in range(START_YEAR, END_YEAR + 1):
 
@@ -107,17 +95,17 @@ for year in range(START_YEAR, END_YEAR + 1):
     print('            END IF;', file = outfile)
     print('        END IF;', file = outfile)
     
-print( '      RETURN NULL;', file = outfile)
-print( '    END', file = outfile)
-print( '$$', file = outfile)
-print( 'LANGUAGE plpgsql;', file = outfile)
+print('      RETURN NULL;', file = outfile)
+print('    END', file = outfile)
+print('$$', file = outfile)
+print('LANGUAGE plpgsql;', file = outfile)
 outfile.close()
 outfile2.close()
 
 outfile = open('add-observation-triggers.sql','w')
-print( 'CREATE TRIGGER observation_insert_trigger', file = outfile)
-print( 'BEFORE INSERT ON {}.observations'.format(schema), file = outfile)
-print( 'FOR EACH ROW EXECUTE PROCEDURE {}.observation_insert_trigger();'.format(schema), file = outfile)
+print('CREATE TRIGGER observation_insert_trigger', file = outfile)
+print('BEFORE INSERT ON {}.observations'.format(schema), file = outfile)
+print('FOR EACH ROW EXECUTE PROCEDURE {}.observation_insert_trigger();'.format(schema), file = outfile)
 outfile.close()
 
 
