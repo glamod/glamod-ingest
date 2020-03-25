@@ -4,7 +4,7 @@ LOG_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/r202003/full-cdm/logs/land/popula
 SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/r202003/full-cdm/sqls/land/organisation
 mkdir -p $LOG_DIR $SQL_DIR
 
-psv_file1=/gws/nopw/j04/c3s311a_lot2/data/ingest/r202003/full-cdm/land/organisation/organisation3.psv
+psv_file1=/gws/nopw/j04/c3s311a_lot2/data/ingest/r202003/full-cdm/land/organisation/organisation.psv
 sql_file=$SQL_DIR/load-organisation.sql
 
 echo "\\cd '$(dirname $psv_file1)/'" > $sql_file
