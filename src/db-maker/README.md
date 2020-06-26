@@ -288,3 +288,11 @@ The agreed fields, and their derivations are:
  - Location: Point Geometry Type, calculated dynamically from: 
    - observations_table.latitude
    - observations_table.longitude
+
+## # Clustering timings
+
+Total time to cluster: 22 hours for 1.4Tbytes
+
+Estimate rate: 1.5Tb per day
+ - should do 10Tb in 1 week!
+
