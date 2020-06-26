@@ -2,40 +2,40 @@ variables:
   Dew Point Temperature:
     units: K
     short_name: dew_point_temperature
-    description: Dew point temperature is the temperature at which a parcel of air reaches saturation upon being cooled at constant pressure and specific humidity. (Available at frequencies: sub-daily)
+    description: "Dew point temperature is the temperature at which a parcel of air reaches saturation upon being cooled at constant pressure and specific humidity. (Available at frequencies: sub-daily)"
   Accumulated Precipitation:
     units: mm
     short_name: accumulated_precipitation
-    description: Accumulated precipitation over specified period (Available at frequencies: daily, monthly)
+    description: "Accumulated precipitation over specified period. (Available at frequencies: daily, monthly)"
   Fresh Snow:
     units: mm
     short_name: fresh_snow
-    description: TBD (Available at frequencies: daily)
+    description: "New snow accumulated between consecutive observations or over reporting period. (Available at frequencies: daily)"
   Snow Depth:
     units: cm
     short_name: snow_depth
-    description: Vertical distance from the snow surface to the underlying surface (ground, glacier ice or sea ice). (Available at frequencies: daily)
+    description: "Vertical distance from the snow surface to the underlying surface (ground, glacier ice or sea ice). (Available at frequencies: daily)"
   Snow Water Equivalent:
     units: mm
     short_name: snow_water_equivalent
-    description: Surface snow amount (Available at frequencies: daily, monthly)
+    description: "Surface snow amount. (Available at frequencies: daily, monthly)"
   Air Pressure:
     units: Pa
     short_name: air_pressure
-    description: Pressure of air column at specified height (Available at frequencies: sub-daily)
+    description: "Pressure of air column at specified height. (Available at frequencies: sub-daily)"
   Air Pressure At Sea Level:
     units: Pa
     short_name: air_pressure_at_sea_level
-    description: Sea level means mean sea level,  which is close to the geoid in sea areas. Air pressure at sea level is the quantity often abbreviated as MSLP or PMSL. (Available at frequencies: sub-daily)
+    description: "Sea level means mean sea level,  which is close to the geoid in sea areas. Air pressure at sea level is the quantity often abbreviated as MSLP or PMSL. (Available at frequencies: sub-daily)"
   Air Temperature:
     units: K
     short_name: air_temperature
-    description: Air temperature is the bulk temperature of the air,  not the surface (skin) temperature. (Available at frequencies: sub-daily, daily, monthly)
+    description: "Air temperature is the bulk temperature of the air,  not the surface (skin) temperature. (Available at frequencies: sub-daily, daily, monthly)"
   Wind From Direction:
     units: degree
     short_name: wind_from_direction
-    description: Direction from which the wind is blowing Lot 1 uses dd  - WMO abbrev. (Available at frequencies: sub-daily, daily)
+    description: "Direction from which the wind is blowing Lot 1 uses dd  - WMO abbrev. (Available at frequencies: sub-daily, daily)"
   Wind Speed:
     units: m s-1
     short_name: wind_speed
-    description: Speed is the magnitude of velocity. Wind is defined as a two-dimensional (horizontal) air velocity vector,  with no vertical component. (Vertical motion in the atmosphere has the standard name upward air velocity.) The wind speed is the magnitude of the wind velocity. Lot 1 uses ff  - WMO abbrev. (Available at frequencies: sub-daily, daily, monthly)
+    description: "Speed is the magnitude of velocity. Wind is defined as a two-dimensional (horizontal) air velocity vector,  with no vertical component. (Vertical motion in the atmosphere has the standard name upward air velocity.) The wind speed is the magnitude of the wind velocity. Lot 1 uses ff  - WMO abbrev. (Available at frequencies: sub-daily, daily, monthly)"

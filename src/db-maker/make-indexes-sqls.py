@@ -15,7 +15,7 @@ sys.path.append('.')
 from _common import *
 
 
-outfile = open('icreate-indexes.sql', 'w')
+outfile = open('oicreate-indexes.sql', 'w')
 
 # generate child tables
 for year in range(START_YEAR, END_YEAR + 1):
@@ -32,6 +32,8 @@ for year in range(START_YEAR, END_YEAR + 1):
            for idx_field in ('date_time', 'observed_variable', 'location'): 
                print('CREATE INDEX {}_{}_idx ON {} ({});'.format(table_short, idx_field, table_name, idx_field), file=outfile) 
 
+           # gist index is second location index...
+           print('CREATE INDEX {}_{}_gist_idx ON {} USING gist ( {} );'.format(table_short, 'location', table_name, 'location'), file=outfile)
            print(f'[INFO] Worked on: {table_name}')
            
 outfile.close()

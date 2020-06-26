@@ -65,6 +65,10 @@ def write_yamls():
                 writer.write(f'    units: {units}\n')
                 writer.write(f'    short_name: {name.lower().replace(" ", "_")}\n') 
                 desc = description[0].capitalize()[0] + description[1:] 
+                desc = desc.rstrip('.') + '.'
+
+                if name.title() == 'Fresh Snow':
+                    desc = 'New snow accumulated between consecutive observations or over reporting period.'
 
                 if domain == 'land':
                     freqs = [_ for _ in freq_keys if code in land_vars[_]]
@@ -72,6 +76,6 @@ def write_yamls():
                 else:
                     availability = ''
 
-                writer.write(f'    description: {desc}{availability}\n')
+                writer.write(f'    description: "{desc}{availability}"\n')
  
 write_yamls()

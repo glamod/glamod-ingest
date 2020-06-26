@@ -2,24 +2,24 @@ variables:
   Dew Point Temperature:
     units: K
     short_name: dew_point_temperature
-    description: Dew point temperature is the temperature at which a parcel of air reaches saturation upon being cooled at constant pressure and specific humidity.
+    description: "Dew point temperature is the temperature at which a parcel of air reaches saturation upon being cooled at constant pressure and specific humidity."
   Air Pressure At Sea Level:
     units: Pa
     short_name: air_pressure_at_sea_level
-    description: Sea level means mean sea level,  which is close to the geoid in sea areas. Air pressure at sea level is the quantity often abbreviated as MSLP or PMSL.
+    description: "Sea level means mean sea level,  which is close to the geoid in sea areas. Air pressure at sea level is the quantity often abbreviated as MSLP or PMSL."
   Air Temperature:
     units: K
     short_name: air_temperature
-    description: Air temperature is the bulk temperature of the air,  not the surface (skin) temperature.
+    description: "Air temperature is the bulk temperature of the air,  not the surface (skin) temperature."
   Water Temperature:
     units: K
     short_name: water_temperature
-    description: Water (sea, river, lake) temperature at depth indicated
+    description: "Water (sea, river, lake) temperature at depth indicated."
   Wind From Direction:
     units: degree
     short_name: wind_from_direction
-    description: Direction from which the wind is blowing Lot 1 uses dd  - WMO abbrev.
+    description: "Direction from which the wind is blowing Lot 1 uses dd  - WMO abbrev."
   Wind Speed:
     units: m s-1
     short_name: wind_speed
-    description: Speed is the magnitude of velocity. Wind is defined as a two-dimensional (horizontal) air velocity vector,  with no vertical component. (Vertical motion in the atmosphere has the standard name upward air velocity.) The wind speed is the magnitude of the wind velocity. Lot 1 uses ff  - WMO abbrev.
+    description: "Speed is the magnitude of velocity. Wind is defined as a two-dimensional (horizontal) air velocity vector,  with no vertical component. (Vertical motion in the atmosphere has the standard name upward air velocity.) The wind speed is the magnitude of the wind velocity. Lot 1 uses ff  - WMO abbrev."
