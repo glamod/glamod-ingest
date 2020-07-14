@@ -11,15 +11,6 @@ Dictionary levels:
  - stage: incoming, level2
  - table: source_configuration, header_table
 
-/gws/nopw/j04/c3s311a_lot2/data/level2/land/r201712 == initial data delivery
-/gws/nopw/j04/c3s311a_lot2/data/level2/land/r201901 == beta data delivery
-/gws/nopw/j04/c3s311a_lot2/data/level2/land/r202001 == first full data delivery
-/gws/nopw/j04/c3s311a_lot2/data/level2/land/r202005 == second full data delivery
-/gws/nopw/j04/c3s311a_lot2/data/level2/land/daily_updates == daily data update files
-
-We are still working on the r202005 2nd data release and I also left the daily
-update directory in this space and this is updating regularly but I can put it
-somewhere else if you like. We will need to discuss the updates at a later stage.
 """
 
 import os
@@ -40,6 +31,7 @@ SETTINGS = None
 
 GWSD = '/gws/nopw/j04/c3s311a_lot2/data'
 GWSM = '/group_workspaces/jasmin2/glamod_marine'
+GWSS = '/gws/smf/j04/c3s311a_lot2'
 
 DATA_BLOCK = """
 r2.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202005/source_configuration
@@ -47,7 +39,7 @@ r2.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202005/sta
 r2.0:full:land  :incoming:header_table:__GWSD__/level2/land/r202005/header_tables
 r2.0:full:land  :incoming:observations_table:__GWSD__/level2/land/r202005/observations_tables
 r2.0:full:land  :incoming:daily_updates:__GWSD__/level2/land/r202005/daily_updates
-r2.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202005/observations
+r2.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202005/observations_tables
 
 r1.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202001/source_configuration
 r1.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202001/station_configuration
@@ -59,11 +51,19 @@ r1.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202001/observations
 r0.2:full:land  :incoming::__GWSD__/level2/land/r201901
 r0.1:full:land  :incoming::__GWSD__/level2/land/r201712
 
-r2.0:full:marine:incoming:source_configuration:NOC_TO_GENERATE
-r2.0:full:marine:incoming:station_configuration:NOC_TO_GENERATE
+r2.0:full:marine:incoming:source_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/source.psv
+r2.0:full:marine:incoming:station_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/station_configuration.psv
+r2.0:full:marine:incoming:sensor_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/sensor_configuration.psv
 r2.0:full:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
 r2.0:full:marine:incoming:observations_table:__GWSM__/data/user_manual/v4/level2
 
+r2.0:lite:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
+r2.0:lite:marine:outputs :lotus:__GWSS__/workflow/r2.0/lite/marine/outputs/lotus
+r2.0:lite:marine:outputs :log:__GWSS__/workflow/r2.0/lite/marine/outputs/log
+r2.0:lite:marine:outputs :workflow:/work/scratch-nopw/astephen/glamod/r2.0/cdmlite/prepare/marine
+
+r1.0:full:marine:incoming:header_table:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2
+r1.0:full:marine:incoming:observations_table:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2
 r1.0:full:marine:incoming:source_configuration:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2/configuration
 r1.0:full:marine:incoming:station_configuration:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2/configuration
 
@@ -96,8 +96,11 @@ def get_settings():
             SETTINGS[release][profile].setdefault(domain, {})
             SETTINGS[release][profile][domain].setdefault(stage, {})
             SETTINGS[release][profile][domain][stage].setdefault(table, {}) 
+
+
             SETTINGS[release][profile][domain][stage][table] = \
-               path.replace('__GWSD__', GWSD).replace('__GWSM__', GWSM)
+               path.replace('__GWSD__', GWSD).replace('__GWSM__', GWSM) \
+               .replace('__GWSS__', GWSS)
             
  
 #        SETTINGS = { 'r2.0': { 'full': { 'land': { 'incoming': { 'source_configuration': join(DATA, 'level2/land/r202005/source_configuration.psv'), 'station_configuration': '' } } } } }
