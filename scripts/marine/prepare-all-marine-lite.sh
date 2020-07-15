@@ -38,17 +38,17 @@ fi
 
 for dr in $data_dirs; do
 
-    cmd="python ${script_dir}/restructure-marine.py -r $release -d $dr"
+    cmd="${script_dir}/restructure-marine.py -r $release -d $dr"
     
     if [ $mode == 'batch' ]; then
 
         sdir=$(basename $dr)
         logbase=${lotus_dir}/${sdir}
-        cmd="bsub -q ${queue} -W 18:00 -o ${logbase}.out -e ${logbase}.err $cmd"
-
+        cmd="sbatch -p ${queue} --time=18:00:00 -o ${logbase}.out -e ${logbase}.err $cmd"
+        
     fi
 
-    echo $cmd
+    echo "[INFO] Running: $cmd"
     $cmd
 
 done 

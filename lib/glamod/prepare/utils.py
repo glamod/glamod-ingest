@@ -42,10 +42,10 @@ def default_column_to_null(df, column, as_int=False):
     if as_int:
         df[column] = series[series.notnull()].apply(lambda item: str(int(item)))
 
-    if len(df[column].isnull()) > 0:
-        import pdb; pdb.set_trace()
-
-    df[column][df[column].isnull()] = 'NULL'
+    # Using Pandas method to avoid "SettingWithCopyWarning"
+    # See: https://www.dataquest.io/blog/settingwithcopywarning/
+    # This sets null values to the string 'NULL'
+    df.loc[df[column].isnull(), column] = 'NULL'
    
 
 def add_location_column(df):
