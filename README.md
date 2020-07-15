@@ -28,7 +28,26 @@ When running on "glamod" servers on JASMIN, set up with:
 source ./setup-env-glamod.sh
 ```
 
+## Testing
+
+You can run some tests:
+
+```
+pytest test
+```
+
 ## Marine ingestion
+
+### CDMLite: Marine 
+
+There is a wrapper script to run all conversions. 
+
+To run all, on release 2, on LOTUS:
+
+```
+scripts/marine/prepare-all-marine-lite.sh r2.0 batch
+```
+
 
 
 

@@ -60,7 +60,7 @@ r2.0:full:marine:incoming:observations_table:__GWSM__/data/user_manual/v4/level2
 r2.0:lite:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
 r2.0:lite:marine:outputs :lotus:__GWSS__/workflow/r2.0/lite/marine/outputs/lotus
 r2.0:lite:marine:outputs :log:__GWSS__/workflow/r2.0/lite/marine/outputs/log
-r2.0:lite:marine:outputs :workflow:/work/scratch-nopw/astephen/glamod/r2.0/cdmlite/prepare/marine
+r2.0:lite:marine:outputs :workflow:/work/scratch-nopw/__USER__/glamod/r2.0/cdmlite/prepare/marine
 
 r1.0:full:marine:incoming:header_table:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2
 r1.0:full:marine:incoming:observations_table:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2
@@ -78,6 +78,7 @@ def get_settings():
     :return: settings dictionary
     """
     global SETTINGS
+    USER = os.environ['USER']
 
     if not SETTINGS:
 
@@ -100,7 +101,7 @@ def get_settings():
 
             SETTINGS[release][profile][domain][stage][table] = \
                path.replace('__GWSD__', GWSD).replace('__GWSM__', GWSM) \
-               .replace('__GWSS__', GWSS)
+               .replace('__GWSS__', GWSS).replace('__USER__', USER)
             
  
 #        SETTINGS = { 'r2.0': { 'full': { 'land': { 'incoming': { 'source_configuration': join(DATA, 'level2/land/r202005/source_configuration.psv'), 'station_configuration': '' } } } } }
