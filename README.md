@@ -42,11 +42,18 @@ pytest test
 
 There is a wrapper script to run all conversions. 
 
-To run all, on release 2, on LOTUS:
+To run all, on release 2, sequentially on the local server:
+
+```
+scripts/marine/prepare-all-marine-lite.sh r2.0 
+```
+
+To run it ALL on LOTUS:
 
 ```
 scripts/marine/prepare-all-marine-lite.sh r2.0 batch
 ```
+
 
 
 
