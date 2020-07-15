@@ -321,7 +321,9 @@ def _fix_years(years):
     return sorted(list(set([int(y) for y in years])))
 
 
-def _validate_years(ctx, years):
+def _validate_years(ctx, param, years):
+
+    assert(param.name == 'years')
 
     if len(years) < 1:
         # Populate from directory

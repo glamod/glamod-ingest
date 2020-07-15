@@ -1,64 +1,35 @@
-# glamod-ingest
+# The "glamod-ingest" package
 
-Ingestion tools for land and marine data. The ingestion covers both:
- 1. Full CDM database
- 2. "cdmlite" database
+This package is a suite of tools for ingesting and managing the multi-terabyte
+observations provided by the GLAMOD project.
 
-## The CDM-lite
+The ingestion pipeline involves multiple steps that are run on mulitple servers.
 
-The CDM-lite is a much cut-down version of the GLAMOD common data model (CDM):
+## Setting your environment
 
- https://github.com/glamod/common_data_model
+You need to have access to the Unix group: `gws_c3s311a_lot2`
 
-It includes a small subset of the fields to reduce the size, and therefore
-improve performance.
+If you have access to more than 16 groups on JASMIN then you need to start your
+session by setting the default group with:
 
-## Database structure
-
-The CDM-lite has the following 19 fields, derived from the CDM tables as shown here:
-
-```
-CREATE lite.observations (
-    observation_id character varying NOT NULL,     /* from: obs */
-    data_policy_licence integer,                   /* from: obs */
-    date_time timestamp with time zone,            /* from: obs */
-    date_time_meaning integer,                     /* from: obs */
-    observation_duration integer,                  /* from: obs */
-    longitude numeric,                             /* from: obs */
-    latitude numeric,                              /* from: obs */
-    report_type integer,                           /* from: header */
-    height_above_surface,                          /* from: observation (marine) OR mapped from observed_variable (land) */
-    observed_variable integer,                     /* from: obs */
-    units integer,                                 /* from: obs */
-    observation_value numeric,                     /* from: obs */
-    value_significance integer,                    /* from: obs */
-    platform_type integer,                         /* from: header */
-    station_type integer,                          /* from: header */
-    primary_station_id character varying,          /* from: header */
-    station_name character varying,                /* from: header */
-    quality_flag integer                           /* from: obs */
-    /* location geography - PostGIS field based on: (longitude, latitude) */
-
-);
-
-ALTER TABLE lite.observations ADD COLUMN location geography(Point, 4326);
-/* UPDATE lite.observations SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326); */
-
+``` 
+newgrp gws_c3s311a_lot2 
 ```
 
-The last field, `location` is a spatial field generated from the `latitude` and
-`longitude` fields.
-
-## Setting up JASMIN environment
+When running on "sci" servers on JASMIN, set up with:
 
 ```
-module load jaspy
-cd <DIR>
-python -m venv venv --system-site-packages
+source ./setup-env-sci.sh
 ```
 
-Activate venv:
+When running on "glamod" servers on JASMIN, set up with:
 
 ```
-source venv/bin/activate
+source ./setup-env-glamod.sh
 ```
+
+## Marine ingestion
+
+
+
+

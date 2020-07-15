@@ -42,6 +42,9 @@ def default_column_to_null(df, column, as_int=False):
     if as_int:
         df[column] = series[series.notnull()].apply(lambda item: str(int(item)))
 
+    if len(df[column].isnull()) > 0:
+        import pdb; pdb.set_trace()
+
     df[column][df[column].isnull()] = 'NULL'
    
 
