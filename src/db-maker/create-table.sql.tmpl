@@ -1,6 +1,7 @@
 CREATE TABLE SCHEMA_NAME.observations (
 
     observation_id character varying NOT NULL PRIMARY KEY,
+    source_id character varying,
     data_policy_licence integer,
     date_time timestamp with time zone,
     date_time_meaning integer,
