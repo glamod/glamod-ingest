@@ -133,7 +133,7 @@ def get_marine_df(paths, ftype):
 
     ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning',
         'observation_duration', 'longitude', 'latitude', 'observation_height_above_station_surface',
-        'observed_variable', 'units', 'observation_value', 'value_significance', 'quality_flag']
+        'observed_variable', 'units', 'observation_value', 'value_significance', 'quality_flag', 'source_id']
 
     na_values = ['--9999.99', '-99999.9', '-9999.99']
 
