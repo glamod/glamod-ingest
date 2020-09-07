@@ -103,7 +103,7 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 'observation_duration', 'longitude', 'latitude', 'report_type', 
 'height_above_surface', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
-'quality_flag', 'location']
+'quality_flag', 'location', 'source_id']
 
 renamers = {'observation_height_above_station_surface': 'height_above_surface'}
 
