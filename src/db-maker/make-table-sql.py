@@ -34,7 +34,8 @@ CREATE TABLE {schema}.observations (
     station_type integer,
     primary_station_id character varying,
     station_name character varying,
-    quality_flag integer
+    quality_flag integer,
+    source_id character varying
 
 );
 
