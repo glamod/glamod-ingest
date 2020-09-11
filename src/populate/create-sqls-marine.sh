@@ -45,6 +45,6 @@ for year in $(ls $BASE_OUTPUT_DIR | sort -r); do
     fi
 
     echo "[INFO] Running: $cmd"
-    #$cmd
+    $cmd
  
 done
