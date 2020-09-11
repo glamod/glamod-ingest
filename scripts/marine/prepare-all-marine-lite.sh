@@ -24,7 +24,6 @@ mkdir -p $lotus_dir
 # Use high memory queue: to cope with big Pandas DataFrames in memory
 queue="high-mem"
 
-
 # Run tasks only in reduced mode
 if [ $mode == 'reduced' ]; then
     data_dirs=$(echo "001-128" | xargs printf -- "${input_dir}/%s ")
