@@ -33,7 +33,7 @@ BASE_OUTPUT_DIR=$($config_script ${release}:lite:marine:outputs:workflow)
 #${REPORT_TYPE}
 #BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r202001/marine/sql
 #BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/marine/sql
-BASE_SQL_DIR=$($config_script ${release}:lite:marine:outputs :sql)
+BASE_SQL_DIR=$($config_script ${release}:lite:marine:outputs:sql)
 
 ydir=$BASE_OUTPUT_DIR/$year
 echo $ydir
