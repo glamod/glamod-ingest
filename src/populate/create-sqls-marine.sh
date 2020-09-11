@@ -38,7 +38,7 @@ for year in $(ls $BASE_OUTPUT_DIR | sort -r); do
     cmd="$PWD/create-sql-marine-year.sh $REPORT_TYPE $year $release"
 
     #todo: updated sql_id to include release
-    sql_id="marine-${REPORT_TYPE}-${year}-$(release)-sql"
+    sql_id="marine-${REPORT_TYPE}-${year}-${release}-sql"
     lotus_base=$lotus_dir/$sql_id
 
     if [ $mode == 'batch' ]; then
