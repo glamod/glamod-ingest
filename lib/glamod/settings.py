@@ -61,7 +61,7 @@ r2.0:lite:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
 r2.0:lite:marine:outputs :lotus:__GWSS__/workflow/r2.0/lite/marine/outputs/lotus
 r2.0:lite:marine:outputs :log:__GWSS__/workflow/r2.0/lite/marine/outputs/log
 r2.0:lite:marine:outputs :workflow:/work/scratch-nopw/__USER__/glamod/r2.0/cdmlite/prepare/marine
-r2.0:lite:marine:outputs :sql:__GWSD__/ingest/marine/sql
+r2.0:lite:marine:outputs :sql:/gws/nopw/j04/c3s311a_lot2/data-test/ingest/marine/sql/
 
 
 r1.0:full:marine:incoming:header_table:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2
