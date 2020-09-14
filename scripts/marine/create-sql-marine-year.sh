@@ -1,6 +1,6 @@
 #!/bin/bash
 
-script_dir=$(realpath  $(pwd)/../../scripts/glamod-config.py)
+script_dir=$(realpath $(dirname $0))
 BASEDIR=$(dirname $script_dir)
 config_script=${BASEDIR}/glamod-config.py
 
