@@ -28,6 +28,8 @@ BASE_OUTPUT_DIR=$($config_script ${release}:lite:marine:outputs:workflow)
 #lotus_dir=/gws/smf/j04/c3s311a_lot2/ingest/log/populate/lotus-marine
 lotus_dir=$($config_script ${release}:lite:marine:outputs:lotus)
 
+queue="high-mem"
+
 mkdir -p $lotus_dir
 
 #mode=batch
@@ -42,7 +44,8 @@ for year in $(ls $BASE_OUTPUT_DIR | sort -r); do
     lotus_base=$lotus_dir/$sql_id
 
     if [ $mode == 'batch' ]; then
-        cmd="bsub -q short-serial -W 02:00 -o ${lotus_base}.out -e ${lotus_base}.err $cmd"
+        #cmd="bsub -q short-serial -W 02:00 -o ${lotus_base}.out -e ${lotus_base}.err $cmd"
+        cmd="sbatch -p ${queue} --time=18:00:00 -o ${lotus_base}.out -e ${lotus_base}.err $cmd"
     fi
 
     echo "[INFO] Running: $cmd"
