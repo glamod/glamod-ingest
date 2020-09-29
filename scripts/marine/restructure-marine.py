@@ -103,7 +103,7 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 'observation_duration', 'longitude', 'latitude', 'report_type', 
 'height_above_surface', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
-'quality_flag', 'location']
+'quality_flag', 'location', 'source_id']
 
 renamers = {'observation_height_above_station_surface': 'height_above_surface'}
 
@@ -133,7 +133,7 @@ def get_marine_df(paths, ftype):
 
     ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning',
         'observation_duration', 'longitude', 'latitude', 'observation_height_above_station_surface',
-        'observed_variable', 'units', 'observation_value', 'value_significance', 'quality_flag']
+        'observed_variable', 'units', 'observation_value', 'value_significance', 'quality_flag', 'source_id']
 
     na_values = ['--9999.99', '-99999.9', '-9999.99']
 
