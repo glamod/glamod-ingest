@@ -39,7 +39,9 @@ r2.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202005/sta
 r2.0:full:land  :incoming:header_table:__GWSD__/level2/land/r202005/header_tables
 r2.0:full:land  :incoming:observations_table:__GWSD__/level2/land/r202005/observations_tables
 r2.0:full:land  :incoming:daily_updates:__GWSD__/level2/land/r202005/daily_updates
-r2.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202005/observations_tables
+r2.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202005/cdm_lite
+r2.0:lite:land  :batches:rules:__GWSD__/level2/land/r202005/batches/cdmlite_batch_rules.txt
+r2.0:lite:land  :batches:input_files:__GWSD__/level2/land/r202005/batches/cdmlite_input_files.txt
 
 r1.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202001/source_configuration
 r1.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202001/station_configuration
@@ -178,4 +180,6 @@ def test():
 if __name__ == '__main__':
 
     test()
+
+
 
