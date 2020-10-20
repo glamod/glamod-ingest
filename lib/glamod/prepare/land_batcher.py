@@ -3,6 +3,7 @@ import glob
 import pandas as pd
 
 import glamod.settings as gs
+from glamod.utils import get_report_types
 
 
 BATCH_FILE = gs.get('r2.0:lite:land:batches:rules') # -> '../data/land_cdmlite_batch_rules.txt'
@@ -39,15 +40,13 @@ class LandBatcher(object):
         files = []
 
         for f in input_files:
-            print(f, path_prefix)
-            sdfsd('TODO make this work with latest data!!!')
             if f.startswith(prefix):
                 files.append(f)
 
         return files
 
     def get_report_type(self, batch_id):
-        report_types = ['sub_daily', '_', 'monthly', 'daily']
+        report_types = get_report_types()
 
         for r in report_types:
             if batch_id.startswith(r):

@@ -89,7 +89,8 @@ def fix_batches(path, paths):
             with open(LAND_BATCH_RULES, 'a') as writer:
 
                 for _, key in enumerate(sorted(d.keys())):
-                    s = f'{path}/{key}*|{key}|{len(d)}|{len(d[key])}'
+                    freq = path.split('/')[-1]
+                    s = f'{path}/{key}*|{freq}-{key}|{len(d)}|{len(d[key])}'
                     writer.write(s + '\n')
 
             print(f'[INFO] Wrote {_ + 1} records to: {LAND_BATCH_RULES}')

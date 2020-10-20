@@ -42,6 +42,9 @@ r2.0:full:land  :incoming:daily_updates:__GWSD__/level2/land/r202005/daily_updat
 r2.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202005/cdm_lite
 r2.0:lite:land  :batches:rules:__GWSD__/level2/land/r202005/batches/cdmlite_batch_rules.txt
 r2.0:lite:land  :batches:input_files:__GWSD__/level2/land/r202005/batches/cdmlite_input_files.txt
+r2.0:lite:land  :outputs:workflow:/work/scratch-nopw/__USER__/glamod/r2.0/cdmlite/prepare/land
+r2.0:lite:land  :outputs:lotus:__GWSS__/workflow/r2.0/lite/land/outputs/lotus
+r2.0:lite:land  :outputs:log:__GWSS__/workflow/r2.0/lite/land/outputs/log
 
 r1.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202001/source_configuration
 r1.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202001/station_configuration

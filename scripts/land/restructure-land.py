@@ -54,8 +54,8 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 'quality_flag', 'location']
 
 
-from lib.glamod.prepare.height_handler import fix_land_height
-from lib.glamod.prepare.land_batcher import LandBatcher
+from glamod.prepare.height_handler import fix_land_height
+from glamod.prepare.land_batcher import LandBatcher
 
 nap = random.randint(10, 180)
 batcher = None
@@ -101,14 +101,13 @@ def get_df(paths, year):
 
 def get_report_type(batch_id):
     _batcher = _get_batcher()
-    report_type = str(_batcher.get_report_type(batch_id))
-    return report_type
+    return _batcher.get_report_type(batch_id)
 
 
 def get_output_paths(batch_id, year):
 
     # BASE/<report_type>/<yyyy>/<report_type>-<yyyy>-<batch_id>.psv
-    report_type = get_report_type(batch_id)
+    report_type = str(get_report_type(batch_id))
     
     year_file = f'{report_type}-{year}-{batch_id}.psv'
     gzip_file = f'{year_file}'
@@ -222,6 +221,9 @@ def process_year(batch_id, year, files):
     # Add the location column
     df['location'] = df.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
 
+    # Remove any white space from the station name
+    df['station_name'] = df['station_name'].str.replace(' ', '')
+
     # Write output file
     if not DRY_RUN:
         print(f'[INFO] Writing output file: {outputs["output_path"]}')
@@ -235,7 +237,7 @@ def process_year(batch_id, year, files):
             if os.path.isfile(failure_file):
                 os.remove(failure_file)
 
-        except Exception as err:
+        except Exception:
             log('failure', outputs, 'Could not write output to PSV file')
 
     else:
