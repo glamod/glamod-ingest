@@ -357,7 +357,7 @@ def _validate_years(ctx, param, years):
 
 @click.command()
 @click.option('--wait/--no-wait', default=False)
-@click.option('-r', '--release', 'release', required=True, help='Release identifier (e.g. "r1.0")')
+@click.option('-r', '--release', 'release', required=True, help='Release identifier (e.g. "r2.0")')
 @click.option('-d', '--directory', 'dr', required=True, help='Directory to scan.')
 @click.argument('years', nargs=-1, callback=_validate_years)
 def main(wait, release, dr, years):

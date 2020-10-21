@@ -46,7 +46,7 @@ for batch_id in $batches; do
         new_batches=1
     fi
 
-    if [ -f $LAST_BATCH_FILE ] && [ $(cat $LAST_BATCH_FILE) == $batch_id ]; then 
+    if [ -f $LAST_BATCH_FILE ] && [ "$(cat $LAST_BATCH_FILE)" == "$batch_id" ]; then 
         new_batches=1
         echo "[INFO] Found batch to resume after..."
         continue
@@ -68,13 +68,13 @@ for batch_id in $batches; do
 
     fi
 
-    cmd="$PREFIX $scr $WAIT -b $batch_id"
+    cmd="$PREFIX $scr $WAIT -r $release -b $batch_id"
     echo "[INFO] Running: $cmd"
     $cmd
 
     echo $batch_id > $LAST_BATCH_FILE
 
-    njobs=$(bjobs | wc -l)
+    njobs=$(squeue -u $USER | wc -l)
 
     while [ $njobs -gt 250 ]; do 
         echo "[INFO] Sleeping for a while..."

@@ -37,9 +37,15 @@ import click
 import glamod.settings as gs
 import glamod.prepare.utils as prep_utils
 
-#BASE_INPUT_DIR = gs.get('r2.0:lite:land:incoming:header_table')
-BASE_OUTPUT_DIR = gs.get('r2.0:lite:land:outputs:workflow')
-BASE_LOG_DIR = gs.get('r2.0:lite:land:outputs:log')
+
+# Set global variables for paths, these will be created when 
+# the "release" is known
+BASE_OUTPUT_DIR = None
+BASE_LOG_DIR = None
+
+# We need one copy of the station configuration cached as a DataFrame
+STATION_CONFIG_SUB_DAILY = None
+STATION_CONFIG_DAILY_MONTHLY = None
 
 # For logging
 VERBOSE = 0
@@ -51,7 +57,7 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 'observation_duration', 'longitude', 'latitude', 'report_type', 
 'height_above_surface', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
-'quality_flag', 'location']
+'quality_flag', 'location', 'source_id']
 
 
 from glamod.prepare.height_handler import fix_land_height
@@ -59,6 +65,28 @@ from glamod.prepare.land_batcher import LandBatcher
 
 nap = random.randint(10, 180)
 batcher = None
+
+
+def initialise(release):
+    if release not in gs.RELEASES:
+        raise ValueError(f'Release {release} is not valid, must be one of: {gs.RELEASES.keys()}')
+
+    # Initalise global variables based on the release
+    global BASE_OUTPUT_DIR
+    global BASE_LOG_DIR
+    global STATION_CONFIG_SUB_DAILY
+    global STATION_CONFIG_DAILY_MONTHLY
+
+    BASE_OUTPUT_DIR = gs.get(f'{release}:lite:land:outputs:workflow')
+    BASE_LOG_DIR = gs.get(f'{release}:lite:land:outputs:log')
+
+    station_config_dir = gs.get(f'{release}:full:land:incoming:station_configuration')
+  
+    sc_sub_daily_path = os.path.join(station_config_dir, 'sub_daily_station_config_file_25_08_20.psv')
+    STATION_CONFIG_SUB_DAILY = pd.read_csv(sc_sub_daily_path, sep='|')
+
+    sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_file_25_08_20.psv')
+    STATION_CONFIG_DAILY_MONTHLY = pd.read_csv(sc_daily_monthly_path, sep='|')
 
 
 def _get_batcher():
@@ -130,22 +158,6 @@ def get_output_paths(batch_id, year):
     return d
 
 
-def log(log_type, outputs, msg=''):
-
-    log_path = outputs[f'{log_type}_path']
-
-    if not DRY_RUN:
-        with open(log_path, 'w') as writer:
-            writer.write(msg)
-
-    log_level = {'success': 'INFO', 'failure': 'ERROR'}[log_type]
-    message = msg or f'Wrote: {log_path}'
-    print(f'[{log_level}] {message}') 
-
-    if log_type == 'success':
-        print(f'[{log_level}] Wrote success file: {log_path}')
-
-
 def _set_platform_type(x):
     if pd.isnull(x['platform_type']):
         return 'NULL'
@@ -153,14 +165,41 @@ def _set_platform_type(x):
     return x['platform_type']
 
 
-def _equal_or_slightly_less(a, b, threshold=5):
-    if a == b: return True
+def _set_source_id(x, frequency):
+    """
+    from cdmlite, get:
+        observation_id (e.g.: AFI0000OAHR-6-1973-01-01-00:00-85-12)
+        from that string, get: <primary_id>-<record_number>-...
 
-    if (b - a) < 0 or (b - a) > threshold:
-        return False
+    from station_configuration:
+        match: primary_id and record_number in station_configuration
+        to get: source_id
 
-    print(f'[WARN] Lengths of main DataFrame ({a}) does not equal length of component DataFrames ({b}).')
-    return True 
+    then insert that source_id into cdmlite records.
+    if no source_id then FAIL
+    """
+    # Derive the primary_id and record_number from the record
+    primary_id, record_number = x['observation_id'].split('-')[:2]
+    record_number = int(record_number)
+
+    if frequency == 'sub_daily':
+        sc = STATION_CONFIG_SUB_DAILY
+    elif frequency in ('daily', 'monthly'):
+        sc = STATION_CONFIG_DAILY_MONTHLY
+    else:
+        raise KeyError(f'Unknown frequency: {frequency}')
+
+    # match: primary_id and record_number in station_configuration
+    station_records = sc[(sc.primary_id == primary_id) & \
+        (sc.record_number == record_number)]
+
+    if len(station_records) != 1:
+        raise Exception(f'Could not match single station to: {primary_id},'
+                        f' {record_number}, {frequency}.')
+
+    # Get the valid source ID
+    source_id = station_records.iloc[0].source_id
+    return source_id
 
 
 def process_year(batch_id, year, files):
@@ -187,8 +226,8 @@ def process_year(batch_id, year, files):
     l_df = len(df)
     l_partial_dfs = sum([len(_) for _ in _partial_dfs]) 
 
-    if not _equal_or_slightly_less(l_df, l_partial_dfs):
-        log('failure', outputs, f'Data frame ({l_df}) length and individual frame lengths ({l_partial_dfs}) need checking')
+    if not prep_utils.equal_or_slightly_less(l_df, l_partial_dfs):
+        prep_utils.log('failure', outputs, f'Data frame ({l_df}) length and individual frame lengths ({l_partial_dfs}) need checking', DRY_RUN)
         return
 
     del _partial_dfs
@@ -204,8 +243,8 @@ def process_year(batch_id, year, files):
     obs_ids_of_bad_time_fields = df[df[time_field].isnull()]['observation_id'].unique().tolist()
 
     if len(obs_ids_of_bad_time_fields) > 0:
-        log('failure', outputs, f'Some fields had missing value for {time_field}. Observation IDs were: '
-                                f'{obs_ids_of_bad_time_fields}')
+        prep_utils.log('failure', outputs, f'Some fields had missing value for {time_field}. Observation IDs were: '
+                                f'{obs_ids_of_bad_time_fields}', DRY_RUN)
         return
 
     # Add height column
@@ -218,11 +257,21 @@ def process_year(batch_id, year, files):
     report_type = get_report_type(batch_id)
     df['report_type'] = report_type
     
+ ###   # Add the location column
+ ###   df['location'] = df.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
+
     # Add the location column
-    df['location'] = df.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
+    print(f'[INFO] Adding location column')
+    start = time.time()
+    prep_utils.add_location_column(df)   
+    print(f'[TIMER] {time.time() - start:.1f} secs')
 
     # Remove any white space from the station name
     df['station_name'] = df['station_name'].str.replace(' ', '')
+
+    # Add "source_id" to the DataFrame
+    frequency = batch_id.split('-')[0]
+    df['source_id'] = df.apply(lambda x: _set_source_id(x, frequency), axis=1) 
 
     # Write output file
     if not DRY_RUN:
@@ -230,7 +279,7 @@ def process_year(batch_id, year, files):
         try:
             df.to_csv(outputs['output_path'], sep='|', index=False, float_format='%.3f', 
                       columns=out_fields, date_format='%Y-%m-%d %H:%M:%S%z')
-            log('success', outputs, msg=f'Wrote: {outputs["output_path"]}')
+            prep_utils.log('success', outputs, f'Wrote: {outputs["output_path"]}', DRY_RUN)
 
             # Remove any previous failure file if exists
             failure_file = outputs['failure_path']
@@ -238,7 +287,7 @@ def process_year(batch_id, year, files):
                 os.remove(failure_file)
 
         except Exception:
-            log('failure', outputs, 'Could not write output to PSV file')
+            prep_utils.log('failure', outputs, 'Could not write output to PSV file', DRY_RUN)
 
     else:
         print('[INFO] Not writing output in DRY RUN mode.')
@@ -269,14 +318,17 @@ def get_year_file_dict(batch_id):
 
 @click.command()
 @click.option('--wait/--no-wait', default=False, help='Short wait (to avoid scheduling problems')
+@click.option('-r', '--release', 'release', required=True, help='Release identifier (e.g. "r2.0")')
 @click.option('--dry-run/--no-dry-run', default=False, help='Run without writing files (dry run)')
 @click.option('-b', '--batch-id', 'batch_id', required=True, help='Batch to process.')
 @click.option('-y', '--year', 'year', required=False, type=int,
               help='Year to be processed (useful for identifying failures).')
 @click.option('-v', '--verbose', 'verbose', count=True, help='Verbose output.')
-def main(wait, dry_run, batch_id, year=None, verbose=0):
+def main(wait, release, dry_run, batch_id, year=None, verbose=0):
     # The `wait` argument is used when running in batch mode. Since the process starts
     # by reading the same input file we don't want them all executing at the same time.
+
+    initialise(release)
 
     if wait:
         print(f'[INFO] Pausing for {nap} seconds to vary input file reading...')

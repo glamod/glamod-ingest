@@ -10,8 +10,6 @@ Utility functions for data preparation.
 
 import os, re, glob, sys, time
 
-import pandas as pd
-
 
 def _resolve_absolute_dir(dr, base_input_dir):
     if dr.startswith(base_input_dir):
@@ -22,14 +20,20 @@ def _resolve_absolute_dir(dr, base_input_dir):
     return data_dir
 
 
-def log(log_type, outputs, msg=''):
+def log(log_type, outputs, msg='', dry_run=False):
+
     log_path = outputs[f'{log_type}_path']
-    with open(log_path, 'w') as writer:
-        writer.write(msg)
+
+    if not dry_run:
+        with open(log_path, 'w') as writer:
+            writer.write(msg)
 
     log_level = {'success': 'INFO', 'failure': 'ERROR'}[log_type]
     message = msg or f'Wrote: {log_path}'
     print(f'[{log_level}] {message}') 
+
+    if log_type == 'success':
+        print(f'[{log_level}] Wrote success file: {log_path}')
 
 
 def default_column_to_null(df, column, as_int=False):
@@ -61,4 +65,23 @@ def add_location_column(df):
     df['location'] = locs
 
 
+def equal_or_slightly_less(a, b, threshold=5):
+    """
+    Return boolean depending on whether `a` is equal to or slightly 
+    less than `b` (based on threshold of allowed deviation).
 
+    Args:
+        a (number): first number
+        b (number): second number
+        threshold (int, optional): Threshold. Defaults to 5.
+
+    Returns:
+        boolean: boolean denoting the result of the comparison
+    """
+    if a == b: return True
+
+    if (b - a) < 0 or (b - a) > threshold:
+        return False
+
+    print(f'[WARN] Lengths of main DataFrame ({a}) does not equal length of component DataFrames ({b}).')
+    return True 
