@@ -267,11 +267,13 @@ def process_year(batch_id, year, files):
     print(f'[TIMER] {time.time() - start:.1f} secs')
 
     # Remove any white space from the station name
-    df['station_name'] = df['station_name'].str.replace(' ', '')
+    df['station_name'] = df['station_name'].str.replace('\s+', ' ', regex=True)
 
     # Add "source_id" to the DataFrame
+    start = time.time()
     frequency = batch_id.split('-')[0]
     df['source_id'] = df.apply(lambda x: _set_source_id(x, frequency), axis=1) 
+    print(f'[TIMER] {time.time() - start:.1f} secs')
 
     # Write output file
     if not DRY_RUN:
