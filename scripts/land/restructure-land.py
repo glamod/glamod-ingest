@@ -46,6 +46,7 @@ BASE_LOG_DIR = None
 # We need one copy of the station configuration cached as a DataFrame
 STATION_CONFIG_SUB_DAILY = None
 STATION_CONFIG_DAILY_MONTHLY = None
+STATION_CONFIG_MATCHES = {}
 
 # For logging
 VERBOSE = 0
@@ -82,11 +83,12 @@ def initialise(release):
 
     station_config_dir = gs.get(f'{release}:full:land:incoming:station_configuration')
   
+    sc_columns = ['primary_id', 'record_number', 'source_id']
     sc_sub_daily_path = os.path.join(station_config_dir, 'sub_daily_station_config_file_25_08_20.psv')
-    STATION_CONFIG_SUB_DAILY = pd.read_csv(sc_sub_daily_path, sep='|')
+    STATION_CONFIG_SUB_DAILY = pd.read_csv(sc_sub_daily_path, sep='|', usecols=sc_columns)
 
     sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_file_25_08_20.psv')
-    STATION_CONFIG_DAILY_MONTHLY = pd.read_csv(sc_daily_monthly_path, sep='|')
+    STATION_CONFIG_DAILY_MONTHLY = pd.read_csv(sc_daily_monthly_path, sep='|', usecols=sc_columns)
 
 
 def _get_batcher():
@@ -182,6 +184,11 @@ def _set_source_id(x, frequency):
     primary_id, record_number = x['observation_id'].split('-')[:2]
     record_number = int(record_number)
 
+    # Look up the cached dictionary of previous matches for quick response
+    key = (primary_id, record_number, frequency) 
+    if key in STATION_CONFIG_MATCHES:
+        return STATION_CONFIG_MATCHES[key]
+
     if frequency == 'sub_daily':
         sc = STATION_CONFIG_SUB_DAILY
     elif frequency in ('daily', 'monthly'):
@@ -199,6 +206,10 @@ def _set_source_id(x, frequency):
 
     # Get the valid source ID
     source_id = station_records.iloc[0].source_id
+
+    # Save the response to the cache
+    STATION_CONFIG_MATCHES[key] = source_id
+
     return source_id
 
 
