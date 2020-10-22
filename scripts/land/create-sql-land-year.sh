@@ -8,6 +8,7 @@ release=$1
 report_type=$2
 year=$3
 
+
 if [ ! $release ]; then
     echo "[ERROR] Please provide release as first argument (e.g. 'r2.0')"
     exit
@@ -22,8 +23,6 @@ if [ ! $year ]; then
     echo "[ERROR] Must provide year as second argument."
     exit
 fi
-
-BASE_INPUT_DIR=
 
 INPUT_DIR=$($config_script ${release}:lite:land:outputs:workflow)/${report_type}
 BASE_SQL_DIR=$($config_script ${release}:lite:land:sql:outputs)

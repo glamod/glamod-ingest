@@ -29,6 +29,10 @@ RELEASES = {
 DEFAULTS = None
 SETTINGS = None
 
+GLOBAL_SETTINGS = {
+    'db_server': 'glamod2.ceda.ac.uk'
+}
+
 GWSD = '/gws/nopw/j04/c3s311a_lot2/data'
 GWSM = '/group_workspaces/jasmin2/glamod_marine'
 GWSS = '/gws/smf/j04/c3s311a_lot2'
@@ -47,6 +51,8 @@ r2.0:lite:land  :outputs:lotus:__GWSS__/workflow/r2.0/lite/land/outputs/lotus
 r2.0:lite:land  :outputs:log:__GWSS__/workflow/r2.0/lite/land/outputs/log
 r2.0:lite:land  :sql:outputs:__GWSS__/workflow/r2.0/lite/land/sql/outputs
 r2.0:lite:land  :sql:lotus:__GWSS__/workflow/r2.0/lite/land/sql/lotus
+r2.0:lite:land  :populate:outputs:__GWSS__/workflow/r2.0/lite/land/populate/log
+
 
 r1.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202001/source_configuration
 r1.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202001/station_configuration
@@ -163,6 +169,10 @@ def get(setting):
     :param setting: colon-separated setting as string
     :return: setting value
     """
+    # If simple key/value global setting then return that
+    if setting in GLOBAL_SETTINGS:
+        return GLOBAL_SETTINGS[setting]
+
     current = get_settings()
 
     for i, lookup in enumerate(setting.split(':')):

@@ -51,7 +51,7 @@ def main():
     
     try:
         print(gs.get(settings_string))
-    except Exception as exc:
+    except Exception:
         raise KeyError(f'Setting not found: {settings_string}')
 
 
