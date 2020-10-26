@@ -200,12 +200,14 @@ def _set_source_id(x, frequency):
     station_records = sc[(sc.primary_id == primary_id) & \
         (sc.record_number == record_number)]
 
-    if len(station_records) != 1:
+    matched_source_ids = list(set(station_records['source_id']))
+
+    if len(matched_source_ids) != 1:
         raise Exception(f'Could not match single station to: {primary_id},'
                         f' {record_number}, {frequency}.')
 
     # Get the valid source ID
-    source_id = station_records.iloc[0].source_id
+    source_id = matched_source_ids[0]
 
     # Save the response to the cache
     STATION_CONFIG_MATCHES[key] = source_id
