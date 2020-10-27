@@ -39,7 +39,7 @@ for year in $(ls ${BASE_INPUT_DIR}/${report_type} | sort -r); do
     lotus_base=$lotus_dir/$sql_id
     
     if [ $mode == 'batch' ]; then
-        cmd="sbatch -p ${queue} 02:00 -o ${lotus_base}.out -e ${lotus_base}.err $cmd"
+        cmd="sbatch -p ${queue} --time=02:00 -o ${lotus_base}.out -e ${lotus_base}.err $cmd"
     fi
 
     echo "[INFO] Running: $cmd"

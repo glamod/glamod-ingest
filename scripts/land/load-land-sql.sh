@@ -11,12 +11,12 @@ BASEDIR=$(dirname $script_dir)
 config_script=${BASEDIR}/glamod-config.py
 
 # Check the host
-db_server=$($config_script db_server)
+#db_server=$($config_script db_server)
 
-if [ $(hostname) != $db_server ]; then
-    echo "[ERROR] This script must be run on the db server: ${db_server}"
-    exit
-fi
+#if [ $(hostname) != $db_server ]; then
+#    echo "[ERROR] This script must be run on the db server: ${db_server}"
+#    exit
+#fi
 
 release=$1
 report_type=$2
@@ -48,7 +48,7 @@ for sql in $(ls $sql_dir | sort -r); do
     echo "[INFO] Loading data from: $sql_file"
     echo "[INFO] Logging to: $log"
 
-    cmd=${PSQL_PREFIX} -f $sql_file
+    cmd="${PSQL_PREFIX} -f $sql_file"
     echo "[INFO] Running: $cmd"
     $cmd > $log 2>&1 
 

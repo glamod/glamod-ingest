@@ -74,27 +74,15 @@ import click
 import glamod.settings as gs
 import glamod.prepare.utils as prep_utils
 
-BASE_INPUT_DIR = gs.get('r2.0:lite:marine:incoming:header_table')
-# _EG_SUB_DIR = '001-110'
 
-#BASE_OUTPUT_DIR = '/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine'
-BASE_OUTPUT_DIR = gs.get('r2.0:lite:marine:outputs:workflow')
-###'/work/scratch-nompiio/astephen/glamod/r202001/cdmlite/marine'
-
-# .../gws/nopw/j04/c3s311a_lot2/data/marine/r092019_cdm_lite/ICOADS_R3.0.0T/level1a'
-
-BASE_LOG_DIR = gs.get('r2.0:lite:marine:outputs:log')
-### '/gws/smf/j04/c3s311a_lot2/cdmlite/log/r202001/prep/marine'
-
-#FILE_PATTN = re.compile('^(observations|header)-?(\w+)?-(?P<year>\d{4})-(\d{2})-(?P<revision>r\d{1,})-(?P<other>\d{1,})\.psv')
+# Set global variables for paths, these will be created when 
+# the "release" is known
+BASE_INPUT_DIR = None
+BASE_OUTPUT_DIR = None
+BASE_LOG_DIR = None
 
 # Note: header field "report_quality" is kept for filtering values of 0 only.
 #    The out_fields will exclude it later.
-#hfields = ['report_type', 'platform_type', 'station_type',  'primary_station_id', 'station_name', 'report_quality']
-
-#ofields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_meaning', 
-#'observation_duration', 'longitude', 'latitude', 'observation_height_above_station_surface',
-#'observed_variable', 'units', 'observation_value', 'value_significance', 'quality_flag']
 
 merge_fields = ['report_id']
 time_field = 'date_time'
@@ -103,17 +91,28 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 'observation_duration', 'longitude', 'latitude', 'report_type', 
 'height_above_surface', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
-'quality_flag', 'location', 'source_id']
+'quality_flag', 'source_id', 'location']
 
 renamers = {'observation_height_above_station_surface': 'height_above_surface'}
 
 
-#header_files = [os.path.basename(_) for _ in glob.glob(f'{BASE_INPUT_DIR}/*/header-*.psv')]
-#years = sorted(list(set([int(_.split('-')[1]) for _ in header_files])))
-#year_range = years[0], years[-1]
-
 # Emptying exclusions - should now all work
 EXCLUDE_DIRS = []
+
+
+def initialise(release):
+    if release not in gs.RELEASES:
+        raise ValueError(f'Release {release} is not valid, must be one of: {gs.RELEASES.keys()}')
+
+    # Initalise global variables based on the release
+    global BASE_INPUT_DIR
+    global BASE_OUTPUT_DIR
+    global BASE_LOG_DIR
+
+    BASE_INPUT_DIR = gs.get(f'{release}:lite:marine:incoming:header_table')
+    BASE_OUTPUT_DIR = gs.get(f'{release}:lite:marine:outputs:workflow')
+    BASE_LOG_DIR = gs.get(f'{release}:lite:marine:outputs:log')
+
 
 def _get_header_files():
     return [os.path.basename(_) for _ in glob.glob(f'{BASE_INPUT_DIR}/*/header-*.psv')] 
@@ -363,6 +362,8 @@ def _validate_years(ctx, param, years):
 def main(wait, release, dr, years):
     # The `wait` argument is used when running in batch mode. Since the process starts
     # by reading the same headers file we don't want them all executing at the same time.
+
+    initialise(release)
 
     # Convert `dr` back to single directory name, to work with other code
     dr = os.path.basename(dr)

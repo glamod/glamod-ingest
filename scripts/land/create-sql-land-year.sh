@@ -24,6 +24,8 @@ if [ ! $year ]; then
     exit
 fi
 
+schema=$(echo $release | sed 's/\./_/g' | sed 's/r/lite_/')
+
 INPUT_DIR=$($config_script ${release}:lite:land:outputs:workflow)/${report_type}
 BASE_SQL_DIR=$($config_script ${release}:lite:land:sql:outputs)
 
@@ -38,8 +40,8 @@ sql_file=${sql_dir}/load-${report_type}-${year}.sql
 rm -f $sql_file
 
 # Ignore if no files present
-if [ $(find $ydir -maxdepth 0 -empty) ]; then
-    continue
+if [ ! -d $ydir ] || [ $(find $ydir -maxdepth 0 -empty) ]; then
+    exit
 fi
 
 echo "\\cd '$ydir/'" > $sql_file
@@ -50,7 +52,7 @@ for fname in $(ls $ydir | sort -u); do
         fname="${fname%.*}"
     fi
 
-    echo "\\COPY lite.observations_${year}_land_${report_type} FROM '$fname' WITH CSV HEADER DELIMITER AS '|' NULL AS 'NULL'" >> $sql_file
+    echo "\\COPY ${schema}.observations_${year}_land_${report_type} FROM '$fname' WITH CSV HEADER DELIMITER AS '|' NULL AS 'NULL'" >> $sql_file
 
 done
 

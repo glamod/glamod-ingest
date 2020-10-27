@@ -58,7 +58,7 @@ out_fields = ['observation_id', 'data_policy_licence', 'date_time', 'date_time_m
 'observation_duration', 'longitude', 'latitude', 'report_type', 
 'height_above_surface', 'observed_variable', 'units', 'observation_value', 
 'value_significance', 'platform_type', 'station_type', 'primary_station_id', 'station_name', 
-'quality_flag', 'location', 'source_id']
+'quality_flag', 'source_id', 'location']
 
 
 from glamod.prepare.height_handler import fix_land_height
@@ -87,7 +87,8 @@ def initialise(release):
     sc_sub_daily_path = os.path.join(station_config_dir, 'sub_daily_station_config_file_25_08_20.psv')
     STATION_CONFIG_SUB_DAILY = pd.read_csv(sc_sub_daily_path, sep='|', usecols=sc_columns)
 
-    sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_file_25_08_20.psv')
+    #previous_sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_file_25_08_20.psv')
+    sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_27_10_2020.psv')
     STATION_CONFIG_DAILY_MONTHLY = pd.read_csv(sc_daily_monthly_path, sep='|', usecols=sc_columns)
 
 
