@@ -101,3 +101,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Project-specific
+*.out
+*.err
+

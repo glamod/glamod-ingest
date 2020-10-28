@@ -1,10 +1,14 @@
 #!/bin/bash
 
+script_dir=$(dirname $0)
 base_dir=$1
 
-if [ ! -f "$base_dir" ]; then
+if [ ! -d "$base_dir" ]; then
     echo "[ERROR] Must provide base directory as only argument!"
     exit
 fi
 
-find $base_dir -type f | xargs -n1 ./fix-in-place.sh
+for f in $(find $base_dir -type f); do
+    /home/users/astephen/glamod/glamod-ingest/scripts/helpers/fix-cdmlite-column-order.sh $f
+done
+

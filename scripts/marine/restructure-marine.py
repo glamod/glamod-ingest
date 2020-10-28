@@ -322,7 +322,8 @@ def _fix_years(years):
 
 def _validate_years(ctx, param, years):
 
-    assert(param.name == 'years')
+    if param.name != 'years':
+        raise KeyError('Parameter must be: years')
 
     if len(years) < 1:
         # Populate from directory
@@ -345,7 +346,7 @@ def _validate_years(ctx, param, years):
     
     try:
         years = _fix_years(years)
-    except Exception as err:
+    except Exception:
         raise ValueError(err_msg)
 
     if years[0] < year_range[0] or years[-1] > year_range[-1]:

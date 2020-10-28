@@ -182,8 +182,7 @@ def _set_source_id(x, frequency):
     if no source_id then FAIL
     """
     # Derive the primary_id and record_number from the record
-    primary_id, record_number = x['observation_id'].split('-')[:2]
-    record_number = int(record_number)
+    primary_id, record_number = prep_utils.extract_from_observation_id(x['observation_id'], 'land')
 
     # Look up the cached dictionary of previous matches for quick response
     key = (primary_id, record_number, frequency) 

@@ -11,6 +11,12 @@ Utility functions for data preparation.
 import os, re, glob, sys, time
 
 
+# Define REGEX for splitting observation id
+OB_ID_LAND_REGEX = re.compile(
+    r'^(?P<primary_id>.+)-(?P<record_number>\d+)-'
+    r'(\d{4})-(\d{2})(-\d{2})?(-\d{2}:\d{2})?-\d+-\d+$')
+
+
 def _resolve_absolute_dir(dr, base_input_dir):
     if dr.startswith(base_input_dir):
         data_dir = dr
@@ -84,4 +90,17 @@ def equal_or_slightly_less(a, b, threshold=5):
         return False
 
     print(f'[WARN] Lengths of main DataFrame ({a}) does not equal length of component DataFrames ({b}).')
-    return True 
+    return True
+
+
+def extract_from_observation_id(observation_id, domain='land'):
+    if domain != 'land':
+        raise NotImplementedError('Not implemented for marine data')
+
+    m = OB_ID_LAND_REGEX.match(observation_id)
+    if not m:
+        raise ValueError('Could not match expected pattern to observation_id: '
+                         f'{observation_id}')
+
+    d = m.groupdict()
+    return d['primary_id'], int(d['record_number'])
