@@ -45,6 +45,7 @@ r2.0:full:land  :incoming:observations_table:__GWSD__/level2/land/r202005/observ
 r2.0:full:land  :incoming:daily_updates:__GWSD__/level2/land/r202005/daily_updates
 r2.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202005/cdm_lite
 r2.0:lite:land  :batches:rules:__GWSD__/level2/land/r202005/batches/cdmlite_batch_rules.txt
+r2.0:lite:land  :batches:years:__GWSS__/workflow/r2.0/lite/land/batches/years_dict.pickle
 r2.0:lite:land  :batches:input_files:__GWSD__/level2/land/r202005/batches/cdmlite_input_files.txt
 r2.0:lite:land  :outputs:workflow:/work/scratch-nopw/__USER__/glamod/r2.0/cdmlite/prepare/land
 r2.0:lite:land  :outputs:lotus:__GWSS__/workflow/r2.0/lite/land/outputs/lotus

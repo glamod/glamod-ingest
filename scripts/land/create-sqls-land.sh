@@ -44,5 +44,10 @@ for year in $(ls ${BASE_INPUT_DIR}/${report_type} | sort -r); do
 
     echo "[INFO] Running: $cmd"
     $cmd
+
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Non-zero return code from: $cmd"
+        exit
+    fi
  
 done

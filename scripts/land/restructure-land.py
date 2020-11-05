@@ -36,6 +36,7 @@ import click
 
 import glamod.settings as gs
 import glamod.prepare.utils as prep_utils
+import glamod.utils.pickle_dict as pdict
 
 
 # Set global variables for paths, these will be created when 
@@ -47,6 +48,9 @@ BASE_LOG_DIR = None
 STATION_CONFIG_SUB_DAILY = None
 STATION_CONFIG_DAILY_MONTHLY = None
 STATION_CONFIG_MATCHES = {}
+
+# Set global for pickled dictionary of cached years
+YEARS_DICT = None
 
 # For logging
 VERBOSE = 0
@@ -77,6 +81,7 @@ def initialise(release):
     global BASE_LOG_DIR
     global STATION_CONFIG_SUB_DAILY
     global STATION_CONFIG_DAILY_MONTHLY
+    global YEARS_DICT
 
     BASE_OUTPUT_DIR = gs.get(f'{release}:lite:land:outputs:workflow')
     BASE_LOG_DIR = gs.get(f'{release}:lite:land:outputs:log')
@@ -90,6 +95,9 @@ def initialise(release):
     #previous_sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_file_25_08_20.psv')
     sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_27_10_2020.psv')
     STATION_CONFIG_DAILY_MONTHLY = pd.read_csv(sc_daily_monthly_path, sep='|', usecols=sc_columns)
+
+    years_dict_file = gs.get(f'{release}:lite:land:batches:years')
+    YEARS_DICT = pdict.PickleDict(years_dict_file)
 
 
 def _get_batcher():
@@ -313,10 +321,19 @@ def process_year(batch_id, year, files):
 
 
 def _read_years_from_gzipped_psv(fpath):
-    print(f'[INFO] Reading: {fpath} to detect years.')
-    df = pd.read_csv(fpath, sep='|')
-    return sorted(list(set([_.year for _ in pd.to_datetime(df['date_time'], utc=True)])))
 
+    yd = YEARS_DICT.read()
+    if fpath in yd:
+        print(f'[INFO] Reading: pickled dict to detect years')
+        years = yd[fpath]
+    else:
+        print(f'[INFO] Reading: {fpath} to detect years')
+        df = pd.read_csv(fpath, sep='|')
+        years = sorted(list(set([_.year for _ in pd.to_datetime(df['date_time'], utc=True)])))
+        YEARS_DICT.add(fpath, years)
+
+    print(f'[INFO] Found years: {years}')
+    return years
 
 def get_year_file_dict(batch_id):
 
