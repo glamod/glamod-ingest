@@ -21,7 +21,6 @@ config_script=${BASEDIR}/glamod-config.py
 release=$1
 report_type=$2
 
-
 if [ ! $release ]; then
     echo "[ERROR] Please provide release as first argument (e.g. 'r2.0')"
     exit
@@ -32,6 +31,23 @@ if [ ! $report_type ] || [[ ! $report_type =~ ^[023]$ ]]; then
     exit
 fi
 
+# Get years as any extra command-line arguments
+years=
+
+n=0
+for i in $@; do
+    if [ $n -lt 2 ]; then
+        let n+=1
+        continue
+    fi
+    
+    years="$years $i"
+done
+
+if [ "$years" ]; then
+    echo "[INFO] Filtering years: $years"
+fi
+
 BASE_SQL_DIR=$($config_script ${release}:lite:land:sql:outputs)
 sql_dir=${BASE_SQL_DIR}/${report_type}
 LOG_DIR=$($config_script ${release}:lite:land:populate:outputs)
@@ -39,6 +55,22 @@ LOG_DIR=$($config_script ${release}:lite:land:populate:outputs)
 mkdir -p $LOG_DIR
 
 for sql in $(ls $sql_dir | sort -r); do
+
+    if [ "$years" ]; then
+        matched_year=
+
+        for year in $years; do
+            if [[ $sql =~ "${year}" ]]; then
+                echo "Matched requested year: $year"
+                matched_year=1
+                break
+            fi
+        done
+    
+        if [ ! "$matched_year" ]; then
+            continue
+        fi
+    fi
 
     log=$LOG_DIR/${sql}.log
     sql_file=$sql_dir/$sql

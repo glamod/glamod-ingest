@@ -106,3 +106,4 @@ venv.bak/
 *.out
 *.err
 
+.setup-psql-prefix

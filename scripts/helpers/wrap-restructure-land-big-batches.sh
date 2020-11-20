@@ -1,4 +1,5 @@
 #!/bin/bash
+
 d=/home/users/astephen/glamod/glamod-ingest
 
 if [ "$1" ]; then
@@ -8,7 +9,7 @@ if [ "$1" ]; then
 else
     batches=$(seq 1 158)
     p="short-serial"
-    t="23:59:59"
+    t="00:59:59"
 fi
 
 

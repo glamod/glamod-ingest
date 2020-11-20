@@ -233,6 +233,9 @@ def process_year(batch_id, year, files):
     if os.path.isfile(outputs['success_path']): 
         print(f'[INFO] Success file exists: {outputs["success_path"]}')
         return
+    # else:
+    #     print(f'RERUNBATCH:{batch_id}')
+    #     return
 
     if VERBOSE: 
         print(f'[INFO] Reading files:')
@@ -288,6 +291,9 @@ def process_year(batch_id, year, files):
     print(f'[TIMER] {time.time() - start:.1f} secs')
 
     # Remove any white space from the station name
+    # Convert all to strings first
+
+    df['station_name'] = df['station_name'].apply(str)
     df['station_name'] = df['station_name'].str.replace('\s+', ' ', regex=True)
 
     # Add "source_id" to the DataFrame - if not already present (i.e. release<=r2.0)
