@@ -89,7 +89,7 @@ def initialise(release):
 
     station_config_dir = gs.get(f'{release}:full:land:incoming:station_configuration')
   
-    sc_columns = ['primary_id', 'record_number', 'source_id']
+    sc_columns = ['primary_id', 'record_number', 'source_id', 'data_policy_licence']
     sc_sub_daily_path = os.path.join(station_config_dir, 'sub_daily_station_config_file_25_08_20.psv')
     STATION_CONFIG_SUB_DAILY = pd.read_csv(sc_sub_daily_path, sep='|', usecols=sc_columns)
 
@@ -187,8 +187,8 @@ def _set_source_id(x, frequency):
         match: primary_id and record_number in station_configuration
         to get: source_id
 
-    then insert that source_id into cdmlite records.
-    if no source_id then FAIL
+    Return the source_id
+    if no source_id or multiple matches then FAIL
     """
     # Derive the primary_id and record_number from the record
     primary_id, record_number = prep_utils.extract_from_observation_id(x['observation_id'], 'land')
@@ -230,19 +230,22 @@ def _fix_data_policy_licence(x, frequency):
         observation_id (e.g.: AFI0000OAHR-6-1973-01-01-00:00-85-12)
         from that string, get: <primary_id>-<record_number>-...
 
-    from station_configuration:
-        match: primary_id and record_number in station_configuration
-        to get: source_id
+    from record (x), get: source_id
 
-    then insert that source_id into cdmlite records.
-    if no source_id then FAIL
+    from station_configuration:
+        match: primary_id and source_id in station_configuration
+        to get: data_policy_licence
+
+    Return the data_policy_licence
+    if no data_policy_licence or multiple matches then FAIL
     """
     # Derive the primary_id and record_number from the record
     primary_id, _ = prep_utils.extract_from_observation_id(x['observation_id'], 'land')
 
     # Look up the cached dictionary of previous matches for quick response
     source_id = x['source_id']
-    key = (primary_id, source_id, frequency) 
+    key = (primary_id, source_id, frequency)
+
     if key in STATION_CONFIG_DATA_POLICY_MATCHES:
         return STATION_CONFIG_DATA_POLICY_MATCHES[key]
 
