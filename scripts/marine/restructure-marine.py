@@ -113,6 +113,8 @@ def initialise(release):
     BASE_OUTPUT_DIR = gs.get(f'{release}:lite:marine:outputs:workflow')
     BASE_LOG_DIR = gs.get(f'{release}:lite:marine:outputs:log')
 
+    print(f'[INFO] Set variable: BASE_INPUT_DIR={BASE_INPUT_DIR}')
+
 
 def _get_header_files():
     return [os.path.basename(_) for _ in glob.glob(f'{BASE_INPUT_DIR}/*/header-*.psv')] 
@@ -162,12 +164,21 @@ def get_marine_input_paths(dr, year, base_input_dir):
     return headers, observers
 
 
-def get_marine_output_paths(dr, path, base_log_dir, base_output_dir):
+def get_marine_output_paths(dr, path, release, base_log_dir, base_output_dir):
     fname = os.path.basename(path)
 
-    FILE_PATTN = re.compile('^(observations|header)-?(\w+)?-(?P<year>\d{4})-(\d{2})-(?P<revision>r\d{1,})-(?P<other>\d{1,})\.psv')
+    print(f'[INFO] Matching file: {fname}')
+    FILE_PATTN = re.compile(r'^header-(?P<year>\d{4})-(\d{2})-(?P<revision>.+)-(?P<other>\d{1,})\.psv$')
+    match = FILE_PATTN.match(fname)
+    
+    if not match:
+        raise Exception(f'Could not match file name: {fname}')
 
-    year_file = '{year}-{revision}-{other}.psv'.format(**FILE_PATTN.match(fname).groupdict())
+    d = match.groupdict().copy()
+    print(f'[INFO] Matched filename to dict: {d}')
+
+    d['release'] = release
+    year_file = '{year}-{release}-{other}.psv'.format(**d)
     year = year_file.split('-')[0]
 
     success_dir = os.path.join(base_log_dir, 'success', dr)
@@ -195,7 +206,7 @@ def process_year(dr, year, release):
     """
     print(f'[INFO] Working on {year} in: {dr}')
     headers, observers = get_marine_input_paths(dr, year, BASE_INPUT_DIR)
-    outputs = get_marine_output_paths(dr, headers[0], BASE_LOG_DIR, BASE_OUTPUT_DIR)
+    outputs = get_marine_output_paths(dr, headers[0], release, BASE_LOG_DIR, BASE_OUTPUT_DIR)
 
     # CHECK: if `success_file` exists: return
     if os.path.isfile(outputs['success_path']): 
@@ -321,6 +332,8 @@ def _fix_years(years):
 
 
 def _validate_years(ctx, param, years):
+
+    initialise(ctx.params["release"])
 
     if param.name != 'years':
         raise KeyError('Parameter must be: years')

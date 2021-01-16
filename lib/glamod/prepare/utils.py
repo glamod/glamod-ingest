@@ -18,6 +18,12 @@ OB_ID_LAND_REGEX = re.compile(
 
 
 def _resolve_absolute_dir(dr, base_input_dir):
+    """Resolve the directory to its absolute path based on the 
+    base directory `base_input_dir`.
+
+    Returns:
+        directory path [string]
+    """
     if dr.startswith(base_input_dir):
         data_dir = dr
     else:

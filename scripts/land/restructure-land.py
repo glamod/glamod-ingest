@@ -286,7 +286,7 @@ def process_year(batch_id, year, files):
         print(f'[INFO] Success file exists: {outputs["success_path"]}')
         return
     # else:
-    #     print(f'RERUNBATCH:{batch_id}')
+    #     print(f'RERUN:/home/users/astephen/glamod/glamod-ingest/scripts/land/restructure-land.py -r r2.0 -b {batch_id} -y {year}')
     #     return
 
     if VERBOSE: 
@@ -333,9 +333,6 @@ def process_year(batch_id, year, files):
     report_type = get_report_type(batch_id)
     df['report_type'] = report_type
     
- ###   # Add the location column
- ###   df['location'] = df.apply(lambda x: 'SRID=4326;POINT({:.3f} {:.3f})'.format(x['longitude'], x['latitude']), axis=1)
-
     # Add the location column
     print(f'[INFO] Adding location column')
     start = time.time()
@@ -384,12 +381,13 @@ def process_year(batch_id, year, files):
 def _read_years_from_gzipped_psv(fpath):
 
     yd = YEARS_DICT.read()
+
     if fpath in yd:
         print(f'[INFO] Reading: pickled dict to detect years')
         years = yd[fpath]
     else:
         print(f'[INFO] Reading: {fpath} to detect years')
-        df = pd.read_csv(fpath, sep='|')
+        df = pd.read_csv(fpath, sep='|', usecols=['date_time'])
         years = sorted(list(set([_.year for _ in pd.to_datetime(df['date_time'], utc=True)])))
         YEARS_DICT.add(fpath, years)
 
@@ -404,6 +402,7 @@ def get_year_file_dict(batch_id):
     resp = {}
 
     for f in files:
+        print(f'[INFO] Working on file: {f}')
         years = _read_years_from_gzipped_psv(f) 
 
         for year in years:

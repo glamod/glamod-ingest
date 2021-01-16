@@ -1,6 +1,7 @@
 import datetime
 import os
 import time
+import random
 
 
 class FileLock(object):
@@ -12,7 +13,7 @@ class FileLock(object):
 
         self.state = "UNLOCKED"
 
-    def acquire(self, timeout=10):
+    def acquire(self, timeout=30):
         start = datetime.datetime.now()
         deadline = start + datetime.timedelta(seconds=timeout)
 
@@ -21,9 +22,10 @@ class FileLock(object):
                 open(self._fpath, "w")
                 break
 
-            time.sleep(3)
+            print(f'[INFO] Sleeping whilst waiting to unlock pickle file...')
+            time.sleep(random.randint(1, 9) * 0.3)
         else:
-            raise Exception(f"Could not obtain file lock on {self._fpath}")
+            raise Exception(f"Could not obtain file lock: {self._fpath}")
 
         self.state = "LOCKED"
 

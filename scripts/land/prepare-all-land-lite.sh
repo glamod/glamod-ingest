@@ -34,7 +34,9 @@ LAST_BATCH_FILE=./last-land-batch.txt
 
 # Use high memory queue: to cope with big Pandas DataFrames in memory
 queue="high-mem"
-queue="short-serial"
+duration="47:00:00"
+#queue="short-serial"
+#duration="18:00:00"
 
 batches=$(${script_dir}/get-all-land-batches.py)
 new_batches=0
@@ -65,7 +67,7 @@ for batch_id in $batches; do
 
         WAIT="--wait"
         logbase=${lotus_dir}/${batch_id}
-        PREFIX="sbatch -p ${queue} --time=18:00:00 -o ${logbase}.out -e ${logbase}.err"
+        PREFIX="sbatch -p ${queue} --time=${duration} -o ${logbase}.out -e ${logbase}.err"
 
     fi
 
