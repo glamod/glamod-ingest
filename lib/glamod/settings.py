@@ -53,7 +53,7 @@ r2.0:lite:land  :outputs:log:__GWSS__/workflow/r2.0/lite/land/outputs/log
 r2.0:lite:land  :sql:outputs:__GWSS__/workflow/r2.0/lite/land/sql/outputs
 r2.0:lite:land  :sql:lotus:__GWSS__/workflow/r2.0/lite/land/sql/lotus
 r2.0:lite:land  :populate:outputs:__GWSS__/workflow/r2.0/lite/land/populate/log
-
+r2.0:lite:land  :counts:outputs:__GWSS__/workflow/r2.0/lite/counts
 
 r1.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202001/source_configuration
 r1.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202001/station_configuration
@@ -75,8 +75,8 @@ r2.0:lite:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
 r2.0:lite:marine:outputs :lotus:__GWSS__/workflow/r2.0/lite/marine/outputs/lotus
 r2.0:lite:marine:outputs :log:__GWSS__/workflow/r2.0/lite/marine/outputs/log
 r2.0:lite:marine:outputs :workflow:/work/scratch-nopw/__USER__/glamod/r2.0/cdmlite/prepare/marine
-r2.0:lite:marine:outputs :sql:/gws/nopw/j04/c3s311a_lot2/data/ingest/marine/sql/
-
+r2.0:lite:marine:outputs :sql:/gws/nopw/j04/c3s311a_lot2/data/ingest/marine/sql
+r2.0:lite:marine:outputs :populate:/gws/nopw/j04/c3s311a_lot2/data/ingest/marine/populate
 
 r1.0:full:marine:incoming:header_table:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2
 r1.0:full:marine:incoming:observations_table:__GWSM__/data/r092019/ICOADS_R3.0.0T/level2

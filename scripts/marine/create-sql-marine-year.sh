@@ -25,18 +25,11 @@ if [ ! $year ]; then
     exit
 fi
 
-#BASE_OUTPUT_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r201910/marine
-#BASE_OUTPUT_DIR=/work/scratch-nompiio/astephen/glamod/r202001/cdmlite/marine
-#todo: why can't these be supplied as args from the wrapper script....?
+schema=$(echo $release | sed 's/\./_/g' | sed 's/r/lite_/')
 BASE_OUTPUT_DIR=$($config_script ${release}:lite:marine:outputs:workflow)
-
-#${REPORT_TYPE}
-#BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/cdmlite/r202001/marine/sql
-#BASE_SQL_DIR=/gws/nopw/j04/c3s311a_lot2/data/ingest/marine/sql
 BASE_SQL_DIR=$($config_script ${release}:lite:marine:outputs:sql)
 
 ydir=$BASE_OUTPUT_DIR/$year
-echo $ydir
 sql_dir=${BASE_SQL_DIR}/${REPORT_TYPE}
 mkdir -p $sql_dir
 
@@ -52,7 +45,7 @@ echo "\\cd '$ydir/'" > $sql_file
     
 for fname in $(ls $ydir | sort -u); do
    
-    echo "\\COPY lite.observations_${year}_marine_${REPORT_TYPE} FROM '$fname' WITH CSV HEADER DELIMITER AS '|' NULL AS 'NULL'" >> $sql_file
+    echo "\\COPY ${schema}.observations_${year}_marine_${REPORT_TYPE} FROM '$fname' WITH CSV HEADER DELIMITER AS '|' NULL AS 'NULL'" >> $sql_file
 
 done
 
