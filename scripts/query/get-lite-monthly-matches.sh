@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# get-lite-monthly-mathces.sh
+# ===========================
+#
+# For each combination of the following fields: if data exists then write a line to 
+# the output. Fields are:
+#   domain,report_type,variable,data_policy_licence,quality_flag,year,month
+
 if [ ! "$PSQL_PREFIX" ]; then
     echo "[ERROR] Must define PSQL_PREFIX env variable...like..."
     echo "        psql -U <user> -h <host> <database>"
@@ -53,7 +60,7 @@ DATA_POLICY_LICENCES="0 1"
 QUALITY_FLAGS="0 1"
 MONTHS=$(seq 1 12)
 
-header="domain,report_type,variable,data_policy_licence,quality_flag,year,month,count"
+header="domain,report_type,variable,data_policy_licence,quality_flag,year,month"
 echo $header
 
 for domain in $DOMAINS; do
@@ -114,12 +121,12 @@ for domain in $DOMAINS; do
                             WHEN="date_time BETWEEN '${year}-${month}-01 00:00:00+00' AND '${year}-${month}-${LAST_DAY} 23:59:59+00'"
                             FILTERS="observed_variable = ${variable} AND data_policy_licence = ${data_policy_licence} AND quality_flag = ${quality_flag}"
 
-                            sql="${SELECT} WHERE ${WHEN} AND ${FILTERS} ;"
+                            sql="${SELECT} WHERE ${WHEN} AND ${FILTERS} LIMIT 1;"
 
-                            count=$($PSQL_PREFIX -t -q -c "${sql}")            
+                            result=$($PSQL_PREFIX -t -q -c "${sql}")            
 
-                            if [ $? -eq 0 ]; then
-                                echo "$domain,$report_type,$variable,$data_policy_licence,$quality_flag,$year,$month,$count"                
+                            if [ $? -eq 0 ] && [ "${result}" ]; then
+                                echo "$domain,$report_type,$variable,$data_policy_licence,$quality_flag,$year,$month"              
                             fi
                     
                         done
