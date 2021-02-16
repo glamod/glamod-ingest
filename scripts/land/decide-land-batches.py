@@ -8,19 +8,15 @@ Read all header files and sort into sensible batches to process together.
 
 """
 
+import click
 import os
 
 import glamod.settings as gs
 
-#BASE_INPUT_DIR = gs.get('r2.0:lite:land:incoming:header_table')
-COMMON_BASE = gs.get('r2.0:lite:land:incoming:observations')
-#BASE_LOG_DIR = gs.get('r2.0:lite:land:outputs:log')
 
-#COMMON_BASE = '/gws/nopw/j04/c3s311a_lot2/data/level2/land/cdm_lite/'
-
-#r2.0:lite:land  :batches:rules:__GWSD__/level2/land/r202005/batches/cdmlite_batch_rules.txt
-input_files_file = gs.get('r2.0:lite:land:batches:input_files')
-LAND_BATCH_RULES = gs.get('r2.0:lite:land:batches:rules')
+COMMON_BASE = None
+INPUT_FILES_FILE = None
+LAND_BATCH_RULES = None
 
 
 freqs = [
@@ -29,15 +25,29 @@ freqs = [
     'sub_daily'
 ]
 
+
+def initialise(release):
+    if release not in gs.RELEASES:
+        raise ValueError(f'Release {release} is not valid, must be one of: {gs.RELEASES.keys()}')
+    
+    global COMMON_BASE
+    global INPUT_FILES_FILE
+    global LAND_BATCH_RULES
+
+    COMMON_BASE = gs.get(f'{release}:lite:land:incoming:observations')
+    INPUT_FILES_FILE = gs.get(f'{release}:lite:land:batches:input_files')
+    LAND_BATCH_RULES = gs.get(f'{release}:lite:land:batches:rules')
+
+
 def get_or_create_input_files_list():
     """Returns a list of all input data files.
 
     Returns:
         list: list of input files
     """
-    print(f'[INFO] Looking up: {input_files_file}')
+    print(f'[INFO] Looking up: {INPUT_FILES_FILE}')
 
-    if not os.path.isfile(input_files_file):
+    if not os.path.isfile(INPUT_FILES_FILE):
         print('[INFO] Creating input files list from scanning directories...')
         input_files = []
 
@@ -48,11 +58,11 @@ def get_or_create_input_files_list():
 
         input_files = sorted(list(set(input_files)))
 
-        with open(input_files_file, 'w') as writer:
+        with open(INPUT_FILES_FILE, 'w') as writer:
             writer.write('\n'.join(input_files))
         
     else:
-        input_files = open(input_files_file).read().strip().split()
+        input_files = open(INPUT_FILES_FILE).read().strip().split()
 
     return input_files
 
@@ -97,7 +107,11 @@ def fix_batches(path, paths):
             return
 
 
-def main():
+@click.command()
+@click.option('-r', '--release', 'release', required=True, help='Release identifier (e.g. "r2.0")')
+def main(release):
+
+    initialise(release)
 
     input_files = get_or_create_input_files_list()
     write_header()

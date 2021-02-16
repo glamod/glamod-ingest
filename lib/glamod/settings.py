@@ -23,7 +23,8 @@ RELEASES = {
     'r0.1': 'initial',
     'r0.2': 'beta',
     'r1.0': 'first',
-    'r2.0': 'second'
+    'r2.0': 'second',
+    'r3.0': 'third'
 }
 
 DEFAULTS = None
@@ -38,6 +39,23 @@ GWSM = '/group_workspaces/jasmin2/glamod_marine'
 GWSS = '/gws/smf/j04/c3s311a_lot2'
 
 DATA_BLOCK = """
+r3.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202005/source_configuration
+r3.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202005/station_configuration
+r3.0:full:land  :incoming:header_table:__GWSD__/level2/land/r202005/header_tables
+r3.0:full:land  :incoming:observations_table:__GWSD__/level2/land/r202005/observations_tables
+r3.0:full:land  :incoming:daily_updates:__GWSD__/level2/land/r202005/daily_updates
+r3.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202005/cdm_lite
+r3.0:lite:land  :batches:rules:__GWSD__/level2/land/r202005/batches/cdmlite_batch_rules.txt
+r3.0:lite:land  :batches:years:__GWSS__/workflow/r3.0/lite/land/batches/years_dict.pickle
+r3.0:lite:land  :batches:input_files:__GWSD__/level2/land/r202005/batches/cdmlite_input_files.txt
+r3.0:lite:land  :outputs:workflow:/work/scratch-nopw/__USER__/glamod/r3.0/cdmlite/prepare/land
+r3.0:lite:land  :outputs:lotus:__GWSS__/workflow/r3.0/lite/land/outputs/lotus
+r3.0:lite:land  :outputs:log:__GWSS__/workflow/r3.0/lite/land/outputs/log
+r3.0:lite:land  :sql:outputs:__GWSS__/workflow/r3.0/lite/land/sql/outputs
+r3.0:lite:land  :sql:lotus:__GWSS__/workflow/r3.0/lite/land/sql/lotus
+r3.0:lite:land  :populate:outputs:__GWSS__/workflow/r3.0/lite/land/populate/log
+r3.0:lite:land  :counts:outputs:__GWSS__/workflow/r3.0/lite/counts
+
 r2.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202005/source_configuration
 r2.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202005/station_configuration
 r2.0:full:land  :incoming:header_table:__GWSD__/level2/land/r202005/header_tables
@@ -64,6 +82,19 @@ r1.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202001/observations
 
 r0.2:full:land  :incoming::__GWSD__/level2/land/r201901
 r0.1:full:land  :incoming::__GWSD__/level2/land/r201712
+
+r3.0:full:marine:incoming:source_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/source.psv
+r3.0:full:marine:incoming:station_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/station_configuration.psv
+r3.0:full:marine:incoming:sensor_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/sensor_configuration.psv
+r3.0:full:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
+r3.0:full:marine:incoming:observations_table:__GWSM__/data/user_manual/v4/level2
+
+r3.0:lite:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
+r3.0:lite:marine:outputs :lotus:__GWSS__/workflow/r3.0/lite/marine/outputs/lotus
+r3.0:lite:marine:outputs :log:__GWSS__/workflow/r3.0/lite/marine/outputs/log
+r3.0:lite:marine:outputs :workflow:/work/scratch-nopw/__USER__/glamod/r3.0/cdmlite/prepare/marine
+r3.0:lite:marine:outputs :sql:/gws/nopw/j04/c3s311a_lot2/data/ingest/marine/sql
+r3.0:lite:marine:outputs :populate:/gws/nopw/j04/c3s311a_lot2/data/ingest/marine/populate
 
 r2.0:full:marine:incoming:source_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/source.psv
 r2.0:full:marine:incoming:station_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/station_configuration.psv
