@@ -44,12 +44,6 @@ import glamod.utils.pickle_dict as pdict
 BASE_OUTPUT_DIR = None
 BASE_LOG_DIR = None
 
-# We need one copy of the station configuration cached as a DataFrame
-STATION_CONFIG_SUB_DAILY = None
-STATION_CONFIG_DAILY_MONTHLY = None
-STATION_CONFIG_SOURCE_ID_MATCHES = {}
-STATION_CONFIG_DATA_POLICY_MATCHES = {}
-
 # Set global for pickled dictionary of cached years
 YEARS_DICT = None
 
@@ -80,22 +74,10 @@ def initialise(release):
     # Initalise global variables based on the release
     global BASE_OUTPUT_DIR
     global BASE_LOG_DIR
-    global STATION_CONFIG_SUB_DAILY
-    global STATION_CONFIG_DAILY_MONTHLY
     global YEARS_DICT
 
     BASE_OUTPUT_DIR = gs.get(f'{release}:lite:land:outputs:workflow')
     BASE_LOG_DIR = gs.get(f'{release}:lite:land:outputs:log')
-
-    station_config_dir = gs.get(f'{release}:full:land:incoming:station_configuration')
-  
-    sc_columns = ['primary_id', 'record_number', 'source_id', 'data_policy_licence']
-    sc_sub_daily_path = os.path.join(station_config_dir, 'sub_daily_station_config_file_25_08_20.psv')
-    STATION_CONFIG_SUB_DAILY = pd.read_csv(sc_sub_daily_path, sep='|', usecols=sc_columns)
-
-    #previous_sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_file_25_08_20.psv')
-    sc_daily_monthly_path = os.path.join(station_config_dir, 'daily_monthly_station_config_27_10_2020.psv')
-    STATION_CONFIG_DAILY_MONTHLY = pd.read_csv(sc_daily_monthly_path, sep='|', usecols=sc_columns)
 
     years_dict_file = gs.get(f'{release}:lite:land:batches:years')
     YEARS_DICT = pdict.PickleDict(years_dict_file)
@@ -128,9 +110,6 @@ def get_df(paths, year):
 
     # Drop duplicates
     [_.drop_duplicates(inplace=True) for _ in data_frames]
-
-#    droppers = [_ for _ in data_frames[0].columns if _ not in fields]
-#    data_frames = [_.drop(columns=droppers) for _ in data_frames]
     
     df = pd.concat(data_frames)
 
@@ -175,104 +154,6 @@ def _set_platform_type(x):
         return 'NULL'
 
     return x['platform_type']
-
-
-def _set_source_id(x, frequency):
-    """
-    from cdmlite, get:
-        observation_id (e.g.: AFI0000OAHR-6-1973-01-01-00:00-85-12)
-        from that string, get: <primary_id>-<record_number>-...
-
-    from station_configuration:
-        match: primary_id and record_number in station_configuration
-        to get: source_id
-
-    Return the source_id
-    if no source_id or multiple matches then FAIL
-    """
-    # Derive the primary_id and record_number from the record
-    primary_id, record_number = prep_utils.extract_from_observation_id(x['observation_id'], 'land')
-
-    # Look up the cached dictionary of previous matches for quick response
-    key = (primary_id, record_number, frequency) 
-    if key in STATION_CONFIG_SOURCE_ID_MATCHES:
-        return STATION_CONFIG_SOURCE_ID_MATCHES[key]
-
-    if frequency == 'sub_daily':
-        sc = STATION_CONFIG_SUB_DAILY
-    elif frequency in ('daily', 'monthly'):
-        sc = STATION_CONFIG_DAILY_MONTHLY
-    else:
-        raise KeyError(f'Unknown frequency: {frequency}')
-
-    # match: primary_id and record_number in station_configuration
-    station_records = sc[(sc.primary_id == primary_id) & \
-        (sc.record_number == record_number)]
-
-    matched_source_ids = list(set(station_records['source_id']))
-
-    if len(matched_source_ids) != 1:
-        raise Exception(f'Could not match single station to: {primary_id},'
-                        f' {record_number}, {frequency}.')
-
-    # Get the valid source ID
-    source_id = matched_source_ids[0]
-
-    # Save the response to the cache
-    STATION_CONFIG_SOURCE_ID_MATCHES[key] = source_id
-
-    return source_id
-
-
-def _fix_data_policy_licence(x, frequency):
-    """
-    from cdmlite, get:
-        observation_id (e.g.: AFI0000OAHR-6-1973-01-01-00:00-85-12)
-        from that string, get: <primary_id>-<record_number>-...
-
-    from record (x), get: source_id
-
-    from station_configuration:
-        match: primary_id and source_id in station_configuration
-        to get: data_policy_licence
-
-    Return the data_policy_licence
-    if no data_policy_licence or multiple matches then FAIL
-    """
-    # Derive the primary_id and record_number from the record
-    primary_id, _ = prep_utils.extract_from_observation_id(x['observation_id'], 'land')
-
-    # Look up the cached dictionary of previous matches for quick response
-    source_id = x['source_id']
-    key = (primary_id, source_id, frequency)
-
-    if key in STATION_CONFIG_DATA_POLICY_MATCHES:
-        return STATION_CONFIG_DATA_POLICY_MATCHES[key]
-
-    if frequency == 'sub_daily':
-        sc = STATION_CONFIG_SUB_DAILY
-    elif frequency in ('daily', 'monthly'):
-        sc = STATION_CONFIG_DAILY_MONTHLY
-    else:
-        raise KeyError(f'Unknown frequency: {frequency}')
-
-    # match: primary_id and source_id in station_configuration to get data_policy_licence
-    station_records = sc[(sc.primary_id == primary_id) & \
-        (sc.source_id == source_id)]
-
-    matched_policies = list(set(station_records['data_policy_licence']))
-
-    if len(matched_policies) != 1:
-        raise Exception(f'Could not extract single data policy licence for: '
-                        f'{primary_id}, {source_id}, {frequency}.') 
-
-    # Get the valid source ID
-    data_policy_licence = matched_policies[0]
-
-    # Save the response to the cache
-    STATION_CONFIG_DATA_POLICY_MATCHES[key] = data_policy_licence
-
-    return data_policy_licence
 
 
 def process_year(batch_id, year, files):
@@ -344,19 +225,6 @@ def process_year(batch_id, year, files):
 
     df['station_name'] = df['station_name'].apply(str)
     df['station_name'] = df['station_name'].str.replace('\s+', ' ', regex=True)
-
-    # Add "source_id" to the DataFrame - if not already present (i.e. release<=r2.0)
-    if 'source_id' not in df.columns:
-        print('[INFO] Adding source_id to DataFrame.')
-        start = time.time()
-        frequency = batch_id.split('-')[0]
-        df['source_id'] = df.apply(lambda x: _set_source_id(x, frequency), axis=1) 
-        print(f'[TIMER] {time.time() - start:.1f} secs')
-    else:
-        print(f'[INFO] Already found source_id in DataFrame.')
-
-    # Update "data_policy_licence" for each record (using station config tables)
-    df['data_policy_licence'] = df.apply(lambda x: _fix_data_policy_licence(x, frequency), axis=1) 
 
     # Write output file
     if not DRY_RUN:
