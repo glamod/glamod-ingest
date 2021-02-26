@@ -121,7 +121,12 @@ def main(release):
         print(f'[INFO] Working on frequency: {freq}')
         dr = os.path.join(COMMON_BASE, freq)
         paths = [_ for _ in input_files if _.startswith(dr)]
-        batches = fix_batches(dr, paths) 
+
+        if paths:
+            batches = fix_batches(dr, paths)
+        else:
+            pass
+
 
 
 if __name__ == '__main__':

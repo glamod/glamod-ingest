@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+import sys
+
 from glamod.prepare.land_batcher import LandBatcher
 
 
-batcher = LandBatcher()
-batches = batcher.get_batches()
+args = sys.argv[1:]
+if not args:
+    raise Exception('Must provide a release as the only argument!')
 
+batcher = LandBatcher(sys.argv[1])
+batches = batcher.get_batches()
 
 for batch_id in batches:
     print(batch_id)

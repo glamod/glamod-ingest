@@ -39,6 +39,8 @@ import glamod.prepare.utils as prep_utils
 import glamod.utils.pickle_dict as pdict
 
 
+RELEASE = None
+
 # Set global variables for paths, these will be created when 
 # the "release" is known
 BASE_OUTPUT_DIR = None
@@ -72,9 +74,12 @@ def initialise(release):
         raise ValueError(f'Release {release} is not valid, must be one of: {gs.RELEASES.keys()}')
 
     # Initalise global variables based on the release
+    global RELEASE
     global BASE_OUTPUT_DIR
     global BASE_LOG_DIR
     global YEARS_DICT
+
+    RELEASE = release
 
     BASE_OUTPUT_DIR = gs.get(f'{release}:lite:land:outputs:workflow')
     BASE_LOG_DIR = gs.get(f'{release}:lite:land:outputs:log')
@@ -87,7 +92,7 @@ def _get_batcher():
     global batcher
 
     if not batcher:
-        batcher = LandBatcher()
+        batcher = LandBatcher(RELEASE)
 
     return batcher
 
@@ -190,7 +195,8 @@ def process_year(batch_id, year, files):
     del _partial_dfs
 
     # Fix column errors
-    column_name_mapper = {'data_policy_licence ': 'data_policy_licence'}
+    column_name_mapper = {'data_policy_licence ': 'data_policy_licence',
+                          'source_id ': 'source_id'}
     df.rename(columns=column_name_mapper, inplace=True)
 
     # Make sure the time field is time
