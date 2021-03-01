@@ -38,7 +38,7 @@ duration="47:00:00"
 #queue="short-serial"
 #duration="18:00:00"
 
-batches=$(${script_dir}/get-all-land-batches.py)
+batches=$(${script_dir}/get-all-land-batches.py $release)
 new_batches=0
 
 # Now loop through all the batches
