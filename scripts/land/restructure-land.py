@@ -200,7 +200,13 @@ def process_year(batch_id, year, files):
     df.rename(columns=column_name_mapper, inplace=True)
 
     # Make sure the time field is time
-    df[time_field] = pd.to_datetime(df[time_field], utc=True) 
+    # utc=True converts all date-times to utc, for example;
+    # 25-07-15 00:00 +01:00 (CET) ---> 24-07-15 23:00 +00:00 (UTC)
+    df[time_field] = pd.to_datetime(df[time_field], utc=True)
+
+    # remove the +00:00 timzone information
+    # 24-07-15 23:00 +00:00 (UTC) ---> 24-07-15 23:00
+    df[time_field] = df[time_field].apply(lambda x: x.replace(tzinfo=None))
 
     # CHECK: all time fields include a real value
     obs_ids_of_bad_time_fields = df[df[time_field].isnull()]['observation_id'].unique().tolist()

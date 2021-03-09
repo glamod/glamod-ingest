@@ -36,6 +36,7 @@ GLOBAL_SETTINGS = {
 
 GWSD = '/gws/nopw/j04/c3s311a_lot2/data'
 GWSM = '/group_workspaces/jasmin2/glamod_marine'
+GWSM2 = '/gws/nopw/j04/glamod_marine'
 GWSS = '/gws/smf/j04/c3s311a_lot2'
 
 DATA_BLOCK = """
@@ -83,13 +84,13 @@ r1.0:lite:land  :incoming:observations:__GWSD__/level2/land/r202001/observations
 r0.2:full:land  :incoming::__GWSD__/level2/land/r201901
 r0.1:full:land  :incoming::__GWSD__/level2/land/r201712
 
-r3.0:full:marine:incoming:source_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/source.psv
-r3.0:full:marine:incoming:station_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/station_configuration.psv
-r3.0:full:marine:incoming:sensor_configuration:__GWSM__/data/user_manual/v4/level2/configuration_tables/sensor_configuration.psv
-r3.0:full:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
-r3.0:full:marine:incoming:observations_table:__GWSM__/data/user_manual/v4/level2
+r3.0:full:marine:incoming:source_configuration:__GWSM2__/data/marine-user-guide/v5/level2/configuration_tables/source.psv
+r3.0:full:marine:incoming:station_configuration:__GWSM2__/data/marine-user-guide/v5/level2/configuration_tables/station_configuration.psv
+r3.0:full:marine:incoming:sensor_configuration:__GWSM2__/data/marine-user-guide/v5/level2/configuration_tables/sensor_configuration.psv
+r3.0:full:marine:incoming:header_table:__GWSM2__/data/marine-user-guide/v5/level2
+r3.0:full:marine:incoming:observations_table:__GWSM2__/data/marine-user-guide/v5/level2
 
-r3.0:lite:marine:incoming:header_table:__GWSM__/data/user_manual/v4/level2
+r3.0:lite:marine:incoming:header_table:__GWSM2__/data/marine-user-guide/v5/level2
 r3.0:lite:marine:outputs :lotus:__GWSS__/workflow/r3.0/lite/marine/outputs/lotus
 r3.0:lite:marine:outputs :log:__GWSS__/workflow/r3.0/lite/marine/outputs/log
 r3.0:lite:marine:outputs :workflow:/work/scratch-nopw/__USER__/glamod/r3.0/cdmlite/prepare/marine
@@ -148,7 +149,8 @@ def get_settings():
 
             SETTINGS[release][profile][domain][stage][table] = \
                path.replace('__GWSD__', GWSD).replace('__GWSM__', GWSM) \
-               .replace('__GWSS__', GWSS).replace('__USER__', USER)
+               .replace('__GWSS__', GWSS).replace('__USER__', USER) \
+               .replace('__GWSM2__', GWSM2)
             
  
 #        SETTINGS = { 'r2.0': { 'full': { 'land': { 'incoming': { 'source_configuration': join(DATA, 'level2/land/r202005/source_configuration.psv'), 'station_configuration': '' } } } } }

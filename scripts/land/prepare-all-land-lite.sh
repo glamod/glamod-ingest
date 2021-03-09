@@ -35,8 +35,8 @@ LAST_BATCH_FILE=./last-land-batch.txt
 # Use high memory queue: to cope with big Pandas DataFrames in memory
 queue="high-mem"
 duration="47:00:00"
-#queue="short-serial"
-#duration="18:00:00"
+queue="short-serial"
+duration="18:00:00"
 
 batches=$(${script_dir}/get-all-land-batches.py $release)
 new_batches=0

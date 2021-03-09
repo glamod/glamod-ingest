@@ -9,7 +9,7 @@ args = sys.argv[1:]
 if not args:
     raise Exception('Must provide a release as the only argument!')
 
-batcher = LandBatcher(sys.argv[1])
+batcher = LandBatcher(args[0])
 batches = batcher.get_batches()
 
 for batch_id in batches:
