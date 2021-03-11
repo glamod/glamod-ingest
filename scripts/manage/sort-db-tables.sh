@@ -8,16 +8,32 @@ fi
 
 release=$1
 
-if [ ! $release ]; then
+if [ ! "$release" ]; then
     echo "[ERROR] Please provide release as first argument (e.g. 'r2.0')"
     exit
 fi
 
+domain=$2
 
-domains="land marine"
-freqs="0 2 3"
+if [ ! "$domain" ]; then
+    domains="land marine"
+else
+    domains=$domain
+fi
+
+echo "[INFO] Running on Domains: $domains"
+
+freq=$3
+
+if [ ! "$freq" ]; then
+    freqs="0 2 3"
+else
+    freqs=$freq
+fi
+
+echo "[INFO] Running on Frequencies: $freqs"
+
 years=$(seq 1750 2020)
-
 schema=$(echo $release | sed 's/\./_/g' | sed 's/r/lite_/g')
 
 
