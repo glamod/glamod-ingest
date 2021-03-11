@@ -111,6 +111,12 @@ rm -f last-land-batch.txt
 
 ### Restructure all land data in "batch" mode
 
+If the script was previously interrupted, the years-dict lock file will still remain and it could cause problems when running again. If this is the case then we can run:
+
+```
+./scripts/land/remover-years-dict-lock.py r3.0
+```
+
 This might take some days, depending on the LOTUS load.
 
 ```
