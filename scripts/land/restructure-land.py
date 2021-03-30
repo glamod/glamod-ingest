@@ -204,7 +204,7 @@ def process_year(batch_id, year, files):
     # 25-07-15 00:00 +01:00 (CET) ---> 24-07-15 23:00 +00:00 (UTC)
     df[time_field] = pd.to_datetime(df[time_field], utc=True)
 
-    # remove the +00:00 timzone information
+    # remove the +00:00 timezone information
     # 24-07-15 23:00 +00:00 (UTC) ---> 24-07-15 23:00
     df[time_field] = df[time_field].apply(lambda x: x.replace(tzinfo=None))
 

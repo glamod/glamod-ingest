@@ -33,7 +33,16 @@ fi
 
 echo "[INFO] Running on Frequencies: $freqs"
 
-years=$(seq 1750 2020)
+start_year=$4
+
+if [ ! "$start_year" ]; then
+    start_year="1750"
+fi
+
+end_year="2020"
+echo "[INFO] Running on years: $start_year ... $end_year"
+
+years=$(seq $start_year $end_year)
 schema=$(echo $release | sed 's/\./_/g' | sed 's/r/lite_/g')
 
 
@@ -46,13 +55,17 @@ for domain in $domains; do
             table="observations_${year}_${domain}_${freq}"
 
             if [ $($PSQL_PREFIX -t -c "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = '${schema}' AND tablename = '${table}');") = 't' ]; then
+
                 table_path="${schema}.${table}"
                 indx="${table}_date_time_idx"
+
                 echo "[INFO] Clustering (sorting): $table_path"
                 echo "STARTED: $(date)"
                 $PSQL_PREFIX -c "CLUSTER ${table_path} USING $indx;"
                 echo "ENDED: $(date)"
-            fi 
+
+            fi
+
         done 
         
     done
