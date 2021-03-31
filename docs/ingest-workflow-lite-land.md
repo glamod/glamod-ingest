@@ -28,7 +28,7 @@ $ find /gws/nopw/j04/c3s311a_lot2/data/level2/land/r202102/cdm_lite  -type f -in
 
 ```
 #withgroups gws_c3s311a_lot2 
-python scripts/land/decide-land-batches.py r3.0  # "r3.0" is the release version
+python scripts/land/decide-land-batches.py -r r3.0  # "r3.0" is the release version
 Fix? [Y/n] Y
 Fix? [Y/n] Y
 Fix? [Y/n] Y
