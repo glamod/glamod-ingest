@@ -30,6 +30,7 @@ For a given <batch_id>:
 
 import os, re, glob
 import random, time
+from datetime import datetime
 
 import pandas as pd
 import click
@@ -124,8 +125,12 @@ def get_df(paths, year):
 
 
 def get_report_type(batch_id):
-    _batcher = _get_batcher()
-    return _batcher.get_report_type(batch_id)
+    # All daily update files are of report type 'daily' / 3
+    if os.path.isfile(batch_id):
+        return 3
+    else:
+        _batcher = _get_batcher()
+        return _batcher.get_report_type(batch_id)
 
 
 def get_output_paths(batch_id, year):
@@ -133,7 +138,13 @@ def get_output_paths(batch_id, year):
     # BASE/<report_type>/<yyyy>/<report_type>-<yyyy>-<batch_id>.psv
     report_type = str(get_report_type(batch_id))
     
-    year_file = f'{report_type}-{year}-{batch_id}.psv'
+    # Alternate name for when batch_id is a file path for a daily update
+    if os.path.isfile(batch_id):
+        file_name = os.path.basename(batch_id).rstrip('.gz').rstrip('.psv')
+        year_file = f'{report_type}-{year}-daily_update-{file_name}.psv'
+    else:
+        year_file = f'{report_type}-{year}-{batch_id}.psv'
+
     gzip_file = f'{year_file}'
 
     year = str(year)
@@ -276,8 +287,12 @@ def _read_years_from_gzipped_psv(fpath):
 
 def get_year_file_dict(batch_id):
 
-    _batcher = _get_batcher()
-    files = _batcher.get(batch_id)
+    # Option to parse file path added, for daily updates
+    if os.path.isfile(batch_id):
+        files = [data_file]
+    else:
+         _batcher = _get_batcher()
+        files = _batcher.get(batch_id)
 
     resp = {}
 
