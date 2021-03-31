@@ -56,6 +56,7 @@ r3.0:lite:land  :sql:outputs:__GWSS__/workflow/r3.0/lite/land/sql/outputs
 r3.0:lite:land  :sql:lotus:__GWSS__/workflow/r3.0/lite/land/sql/lotus
 r3.0:lite:land  :populate:outputs:__GWSS__/workflow/r3.0/lite/land/populate/log
 r3.0:lite:land  :counts:outputs:__GWSS__/workflow/r3.0/lite/counts
+r3.0:full:land  :incoming:daily_updates:__GWSD__/level2/land/r202102/daily_updates
 
 r2.0:full:land  :incoming:source_configuration:__GWSD__/level2/land/r202005/source_configuration
 r2.0:full:land  :incoming:station_configuration:__GWSD__/level2/land/r202005/station_configuration
