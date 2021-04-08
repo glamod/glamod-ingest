@@ -38,6 +38,7 @@ duration="47:00:00"
 queue="short-serial"
 duration="18:00:00"
 
+echo "[INFO] Loading batches..."
 batches=$(${script_dir}/get-all-land-batches.py $release)
 new_batches=0
 
@@ -77,13 +78,16 @@ for batch_id in $batches; do
 
     echo $batch_id > $LAST_BATCH_FILE
 
-    njobs=$(squeue -u $USER | wc -l)
-
-    while [ $njobs -gt 250 ]; do 
-        echo "[INFO] Sleeping for a while..."
-        sleep $NAP
+    if [ $mode == 'batch' ]; then
         njobs=$(squeue -u $USER | wc -l)
-    done
+
+        while [ $njobs -gt 250 ]; do 
+            echo "[INFO] Sleeping for a while..."
+            sleep $NAP
+            njobs=$(squeue -u $USER | wc -l)
+        done
+
+    fi
 
 done
 

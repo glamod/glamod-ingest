@@ -182,7 +182,11 @@ def process_year(batch_id, year, files):
     else:
         print(f'[INFO] Reading input files: {files[0]} , etc.')
 
-    df, _partial_dfs = get_df(files, year)
+    try:
+        df, _partial_dfs = get_df(files, year)
+    except UnicodeDecodeError:
+        prep_utils.log('failure', outputs, f'Could not parse Unicode content in files: {files}', DRY_RUN)
+        return
 
     # CHECK: lengths of concatenated df equals sum of individual dfs
     l_df = len(df)
@@ -304,6 +308,7 @@ def main(wait, release, dry_run, batch_id, year=None, verbose=0):
     # The `wait` argument is used when running in batch mode. Since the process starts
     # by reading the same input file we don't want them all executing at the same time.
 
+    print(f'[INFO] Initialising with release: {release}')
     initialise(release)
 
     if wait:

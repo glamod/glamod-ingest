@@ -1,4 +1,5 @@
 import os
+import time
 import glob
 import pandas as pd
 
@@ -21,8 +22,11 @@ class LandBatcher(object):
 
 
     def _load(self):
+        start = time.time()
         self._df = pd.read_csv(self.BATCH_FILE, sep='|')
         self.batches = sorted(list(self._df.batch_id.unique()))
+        duration = time.time() - start
+        print(f'[INFO] Took {duration:.4f} seconds to load batches')
 
     def get_batches(self):
         return self.batches[:]
@@ -53,9 +57,13 @@ class LandBatcher(object):
         raise KeyError(f'Cannot work out report_type for batch: {batch_id}')
 
     def get_file_list(self):
+        start = time.time()
+
         if not self._input_files:
             print('[INFO] Loading file list...')
             self._input_files = open(self.FILE_LIST).read().strip().split()
+            duration = time.time() - start
+            print(f'[INFO] Took {duration:.4f} seconds to load batch...')
 
         return self._input_files
 
