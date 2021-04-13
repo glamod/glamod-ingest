@@ -26,6 +26,9 @@ time_field = 'date_time'
 
 
 def initialise(release):
+    
+    if release not in gs.RELEASES:
+        raise ValueError(f'Release {release} is not valid, must be one of: {gs.RELEASES.keys()}')
 
     global BASE_UPDATE_DIR
     global INCOMING_UPDATE_DIR
@@ -36,14 +39,13 @@ def initialise(release):
     global YEARS_DICT
     global CONNECTION_STRING
 
+    RELEASE = release
+
     BASE_UPDATE_DIR = gs.get(f'{release}:lite:land:incoming:daily_updates')
     INCOMING_UPDATE_DIR = os.path.join(BASE_UPDATE_DIR, 'incoming')
     PROCESSING_UPDATE_DIR = os.path.join(BASE_UPDATE_DIR, 'processing')
     FAILED_UPDATE_DIR = os.path.join(BASE_UPDATE_DIR, 'failed')
     COMPLETE_UPDATE_DIR = os.path.join(BASE_UPDATE_DIR, 'complete')
-
-    #TODO: check is an actual release
-    RELEASE = release
 
     years_dict_file = gs.get(f'{release}:lite:land:batches:years')
     YEARS_DICT = pdict.PickleDict(years_dict_file)
@@ -57,6 +59,9 @@ def initialise(release):
         host = prefix_split[4]
         db_name = prefix_split[5]
         CONNECTION_STRING = f'postgresql://{username}:{pword}@{host}:5432/{db_name}'
+
+    else:
+        raise ValueError('Please make sure environment variables PSQL_PREFIX and PGPASSWORD are set')
 
 
 def report_result(case):
