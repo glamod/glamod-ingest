@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import click
-import pandas as pd
 import os
+import pandas as pd
+import smtplib
 from sqlalchemy import create_engine
 from subprocess import run, PIPE
 
@@ -23,10 +24,11 @@ YEARS_DICT = None
 CONNECTION_STRING = None
 
 time_field = 'date_time'
+recipients = ['jonathan.haigh@stfc.ac.uk']
 
 
 def initialise(release):
-    
+
     if release not in gs.RELEASES:
         raise ValueError(f'Release {release} is not valid, must be one of: {gs.RELEASES.keys()}')
 
@@ -59,23 +61,13 @@ def initialise(release):
         host = prefix_split[4]
         db_name = prefix_split[5]
         CONNECTION_STRING = f'postgresql://{username}:{pword}@{host}:5432/{db_name}'
-
     else:
         raise ValueError('Please make sure environment variables PSQL_PREFIX and PGPASSWORD are set')
-
-
-def report_result(case):
-
-    if case == 'failure':
-
-        # move to failed dir
-        os.rename(f, os.path.join(FAILED_UPDATE_DIR, os.path.basename(f_path)))
-        # email...
-
-
     
 
 def process_files():
+
+    reporter = Reporter(recipients)
 
     # move files to processing dir
     processing_files = []
@@ -91,13 +83,18 @@ def process_files():
 
     for f_path in processing_files:
 
+        failed = False
+
         # restructure
         restructure_script = os.path.join(current_dir, 'restructure-land.py')
         result = run(['python', restructure_script, '-r', RELEASE, '-b', f_path])
 
-        if 'failure' in result.stdout || result.returncode != 0:
-
-            report_result('failure')
+        if 'failure' in result.stdout:
+            reporter.add_report(f_path, 'failure', result.stdout)
+            continue
+        elif result.returncode != 0:
+            reporter.add_report(f_path, 'failure', f'[ERROR] Error restructuring {f_path}: {result.stderr}')
+            continue
 
         # sql
         input_dir = os.path.join(gs.get(f'{release}:lite:land:outputs:workflow'), '3')
@@ -116,24 +113,68 @@ def process_files():
 
             df = pd.read_csv(input_file_path, sep='|', parse_dates=[time_field])
 
+            # use r2.0 for testing
             schema = 'lite_' + RELEASE[1:].replace('.', '_')
             table_name = f'{schema}.observations_{yr}_land_3'
 
-            df.to_sql(table_name, con=engine, if_exists='append', index=False)
-
-
-
-
+            try:
+                df.to_sql(table_name, con=engine, if_exists='append', index=False)
+            except Exception as e:
+                reporter.add_report(f_path, 'failure', f'[ERROR] Error loading sql for {f_path} {yr}: {str(e)}')
+                failed = True
+                break
         
+        if not failed:
+            reporter.add_report(f_path, 'success', f'[INFO] {f_path} processed successfully')
 
-    
+    reporter.send_reports()
+
 
 @click.command()
 @click.option('-r', '--release', 'release', required=True, help='Release identifier (e.g. "r2.0")')
 def main(release):
 
     initialise(release)
-
     process_files()
 
 
+class Reporter():
+
+    def __init__(self, recipients):
+
+        self.reports = []
+        self.recipients = recipients
+
+
+    def add_report(self, f_path, case, message): # make a class
+
+        print(message)
+        self.reports.append((f_path, message))
+
+        if case == 'failure':
+            os.rename(f_path, os.path.join(FAILED_UPDATE_DIR, os.path.basename(f_path)))
+
+        elif case == 'success':
+            os.rename(f_path, os.path.join(COMPLETE_UPDATE_DIR, os.path.basename(f_path)))
+
+
+    def send_reports(self):
+
+        from_address = 'no-reply@ceda.ac.uk'
+        mailhost = 'exchsmtp.stfc.ac.uk'
+        subject = 'GLAMOD Daily Updates Report'
+
+        server = smtplib.SMTP(mailhost)
+        server.set_debuglevel(1)
+
+        message = ''
+
+        for f_path, message in self.reports:
+            message += f'{f_path}\n{message}\n\n'
+
+        for recipient in self.recipients:
+            content = f'To: {recipient}\nFrom: {from_address}\nSubject: {subject}\n\n{message}'
+
+            server.sendmail(from_address, recipient, content)
+
+        server.close()
