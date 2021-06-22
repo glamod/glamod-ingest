@@ -3,7 +3,10 @@
 import click
 import os
 import pandas as pd
+import shutil
 import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from sqlalchemy import create_engine
 from subprocess import run, PIPE
 
@@ -44,6 +47,8 @@ def initialise(release):
     RELEASE = release
 
     BASE_UPDATE_DIR = gs.get(f'{release}:lite:land:incoming:daily_updates')
+    # LOOKING IN HOME DIR WHILE TESTING
+    # INCOMING_UPDATE_DIR = '/home/users/jhaigh0/test-files'
     INCOMING_UPDATE_DIR = os.path.join(BASE_UPDATE_DIR, 'incoming')
     PROCESSING_UPDATE_DIR = os.path.join(BASE_UPDATE_DIR, 'processing')
     FAILED_UPDATE_DIR = os.path.join(BASE_UPDATE_DIR, 'failed')
@@ -75,33 +80,39 @@ def process_files():
     for f in os.listdir(INCOMING_UPDATE_DIR):
         if os.path.isfile(os.path.join(INCOMING_UPDATE_DIR, f)):
 
-            os.rename(os.path.join(INCOMING_UPDATE_DIR, f), 
-                      os.path.join(PROCESSING_UPDATE_DIR, f))
+            shutil.move(os.path.join(INCOMING_UPDATE_DIR, f), 
+                        os.path.join(PROCESSING_UPDATE_DIR, f))
             
             processing_files.append(os.path.join(PROCESSING_UPDATE_DIR, f))
 
+    print('[INFO] Collected files:', processing_files)
 
     for f_path in processing_files:
+
+        print('[INFO] Processing', f_path)
 
         failed = False
 
         # restructure
         restructure_script = os.path.join(current_dir, 'restructure-land.py')
-        result = run(['python', restructure_script, '-r', RELEASE, '-b', f_path])
+        cmd = ['python', restructure_script, '-r', RELEASE, '-b', f_path]
+        print(f'[INFO] Running: {" ".join(cmd)}')
+        result = run(cmd, capture_output=True)
 
-        if 'failure' in result.stdout:
-            reporter.add_report(f_path, 'failure', result.stdout)
+        stdout = result.stdout.decode('utf-8')
+        stderr = result.stderr.decode('utf-8')
+
+        if result.returncode != 0:
+            reporter.add_report(f_path, 'failure', f'[ERROR] Error restructuring {f_path} \n stderr: {stderr} \n stdout: {stdout}')
             continue
-        elif result.returncode != 0:
-            reporter.add_report(f_path, 'failure', f'[ERROR] Error restructuring {f_path}: {result.stderr}')
+        elif 'failure' in stdout:
+            reporter.add_report(f_path, 'failure', stdout)
             continue
 
         # sql
-        input_dir = os.path.join(gs.get(f'{release}:lite:land:outputs:workflow'), '3')
+        input_dir = os.path.join(gs.get(f'{RELEASE}:lite:land:outputs:workflow'), '3')
         yd = YEARS_DICT.read()
-        years = yd[f_path] # very unlikely this will be more than one
-
-        output_dir = os.path.join(gs.get(f'{release}:lite:land:sql:outputs'), '3')
+        years = yd[f_path]
 
         engine = create_engine(CONNECTION_STRING, echo=False)
 
@@ -109,16 +120,18 @@ def process_files():
 
             f_basename = os.path.basename(f_path).rstrip('.gz').rstrip('.psv')
             input_file_name = f'3-{yr}-daily_update-{f_basename}.psv'
-            input_file_path = os.path.join(input_dir, yr, input_file_name)
+            input_file_path = os.path.join(input_dir, str(yr), input_file_name)
 
+            print(f'[INFO] reading in {input_file_path}')
             df = pd.read_csv(input_file_path, sep='|', parse_dates=[time_field])
 
-            # use r2.0 for testing
-            schema = 'lite_' + RELEASE[1:].replace('.', '_')
-            table_name = f'{schema}.observations_{yr}_land_3'
-
+            # use r2.0 for testing since there's no data there
+            schema = 'lite_2_0'
+            # schema = 'lite_' + RELEASE[1:].replace('.', '_')
+            table_name = f'observations_{yr}_land_3'
             try:
-                df.to_sql(table_name, con=engine, if_exists='append', index=False)
+                print(f'[INFO] writing to {schema}.{table_name}')
+                df.to_sql(table_name, con=engine, schema=schema, if_exists='append', index=False)
             except Exception as e:
                 reporter.add_report(f_path, 'failure', f'[ERROR] Error loading sql for {f_path} {yr}: {str(e)}')
                 failed = True
@@ -152,10 +165,10 @@ class Reporter():
         self.reports.append((f_path, message))
 
         if case == 'failure':
-            os.rename(f_path, os.path.join(FAILED_UPDATE_DIR, os.path.basename(f_path)))
+            shutil.move(f_path, os.path.join(FAILED_UPDATE_DIR, os.path.basename(f_path)))
 
         elif case == 'success':
-            os.rename(f_path, os.path.join(COMPLETE_UPDATE_DIR, os.path.basename(f_path)))
+            shutil.move(f_path, os.path.join(COMPLETE_UPDATE_DIR, os.path.basename(f_path)))
 
 
     def send_reports(self):
@@ -167,14 +180,45 @@ class Reporter():
         server = smtplib.SMTP(mailhost)
         server.set_debuglevel(1)
 
-        message = ''
+        text_message_string = ''
+        html_message_string = f"""\
+            <html>
+                <head></head>
+                <body>
+                    <h2>{subject}</h2>
+                    <br/>
+                    <p>
+        """
 
         for f_path, message in self.reports:
-            message += f'{f_path}\n{message}\n\n'
+            text_message_string += f'{f_path}\n{message}\n\n'
+            html_message_string += f'<b>{f_path}</b><br>{message}<br/>'
+
+        html_message_string += """\
+                    </p>
+                </body>
+            </html>
+        """
 
         for recipient in self.recipients:
-            content = f'To: {recipient}\nFrom: {from_address}\nSubject: {subject}\n\n{message}'
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = from_address
+            msg['To'] = recipient
 
-            server.sendmail(from_address, recipient, content)
+            part1 = MIMEText(text_message_string, 'plain')
+            part2 = MIMEText(html_message_string, 'html')
+
+            msg.attach(part1)
+            msg.attach(part2)
+
+            #content = f'To: {recipient}\nFrom: {from_address}\nSubject: {subject}\n\n{message_string}'
+            #server.sendmail(from_address, recipient, content)
+            
+            server.sendmail(from_address, recipient, msg.as_string())
 
         server.close()
+
+
+if __name__ == '__main__':
+    main()

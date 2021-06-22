@@ -262,8 +262,9 @@ def process_year(batch_id, year, files):
             if os.path.isfile(failure_file):
                 os.remove(failure_file)
 
-        except Exception:
+        except Exception as e:
             prep_utils.log('failure', outputs, 'Could not write output to PSV file', DRY_RUN)
+            print(f'[ERROR]: {e}')
 
     else:
         print('[INFO] Not writing output in DRY RUN mode.')
@@ -289,9 +290,9 @@ def get_year_file_dict(batch_id):
 
     # Option to parse file path added, for daily updates
     if os.path.isfile(batch_id):
-        files = [data_file]
+        files = [batch_id]
     else:
-         _batcher = _get_batcher()
+        _batcher = _get_batcher()
         files = _batcher.get(batch_id)
 
     resp = {}
