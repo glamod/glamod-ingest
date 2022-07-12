@@ -35,8 +35,8 @@ CREATE TABLE {schema}.observations (
     primary_station_id character varying,
     station_name character varying,
     quality_flag integer,
-    source_id character varying
-
+    source_id character varying,
+    date date
 );
 
 ALTER TABLE {schema}.observations ADD COLUMN location geography(Point, 4326);
