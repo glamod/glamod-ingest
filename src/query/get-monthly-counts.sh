@@ -46,7 +46,7 @@ VARIABLES=""
 DATA_POLICY_LICENCES="0 1"
 QUALITY_FLAGS="0 1"
 
-YEARS=$(seq 1761 2019)
+YEARS=$(seq 1761 2022)
 MONTHS=$(seq 1 12)
 
 header="domain,report_type,variable,data_policy_licence,quality_flag,year,month,count"
@@ -56,7 +56,7 @@ for domain in $DOMAINS; do
 
     if [ $domain = "marine" ]; then
         REPORT_TYPES="0"
-        YEARS=$(seq 1946 2019)
+        YEARS=$(seq 1946 2022)
     fi
 
     for report_type in $REPORT_TYPES; do
