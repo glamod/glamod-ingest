@@ -8,7 +8,7 @@ REPORT_TYPES=$2
 
 VARIABLES=""
 
-YEARS=$(seq 1761 2022)
+YEARS=$(seq 1753 2022)
 MONTHS=$(seq 1 12)
 
 

@@ -6,7 +6,7 @@ REPORT_TYPES=$2
 
 echo $DOMAINS $REPORT_TYPES
 
-YEARS=$(seq 1761 2022)
+YEARS=$(seq 1753 2022)
 
 
 for domain in $DOMAINS; do
