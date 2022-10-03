@@ -3,8 +3,8 @@ import sys
 schema = sys.argv[1]
 
 stations = {
-    'land':   {'report': [0, 2, 3], 'start': 1761},
-    'marine': {'report': [0], 'start': 1946},
+    'land':   {'report': [0, 2, 3], 'start': 1752},
+    'marine': {'report': [0], 'start': 1851},
 }
 
 inv_stations = {
@@ -12,7 +12,7 @@ inv_stations = {
     'marine': 2
 }
 
-START_YEAR = 1761
-END_YEAR = 2019
+START_YEAR = 1752
+END_YEAR = 2022
 
 

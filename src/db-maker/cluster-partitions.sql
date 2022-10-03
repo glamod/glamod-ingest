@@ -1,3 +1,6 @@
+CLUSTER lite.observations_1752_land_0 USING observations_1752_land_0_date_time_idx;
+CLUSTER lite.observations_1752_land_2 USING observations_1752_land_2_date_time_idx;
+CLUSTER lite.observations_1752_land_3 USING observations_1752_land_3_date_time_idx;
 CLUSTER lite.observations_1753_land_0 USING observations_1753_land_0_date_time_idx;
 CLUSTER lite.observations_1753_land_2 USING observations_1753_land_2_date_time_idx;
 CLUSTER lite.observations_1753_land_3 USING observations_1753_land_3_date_time_idx;
