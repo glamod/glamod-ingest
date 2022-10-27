@@ -36,8 +36,7 @@ CREATE TABLE {schema}.observations (
     station_name character varying,
     quality_flag integer,
     source_id character varying,
-    location geography(Point, 4326),
-    date date
+    location geography(Point, 4326)
 );
 
 """
